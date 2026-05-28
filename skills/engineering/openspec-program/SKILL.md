@@ -66,11 +66,22 @@ Use `openspec/config.yaml` to keep context bounded. Default to these constraints
 
 | Prefix | Use |
 |--------|-----|
-| `T` | Behavior / coverage slices |
-| `L` | Legacy / stabilization / infrastructure |
-| `F` | Product feature slices (when needed) |
+| `F` | Product feature slices |
+| `R` | Refactoring slices (no intended behavior change) |
+| `T` | Testing and quality slices |
+| `D` | Documentation-only slices |
+| `I` | Infrastructure/tooling slices (optional) |
 
-Number sequentially within prefix (`T01`, `L02`, …).
+Number sequentially within prefix (`F01`, `R02`, …).
+
+Prefix decision rules:
+
+- Use `F` when user-visible behavior or API behavior changes.
+- Use `R` for structural code improvements without intended behavior changes.
+- Use `T` when the primary output is tests, coverage, or reliability harness work.
+- Use `D` when the primary output is documentation/runbook/spec support text.
+- Use `I` for CI, build, tooling, or environment changes.
+- Split mixed slices into smaller slices when possible (for example `R` + `T`).
 
 ## Status model
 
@@ -108,7 +119,7 @@ Create `openspec/TIMELINE_<context>.md` from a PRD or epic:
 - Priority scale — default P0 (urgent) / P1 / P2
 - `principles` — optional global constraints (testing, security, etc.)
 - `execution_order` — ordered slice list; note when reordered
-- Item kind — `T` | `L` | `F` per slice
+- Item kind — `F` | `R` | `T` | `D` (`I` optional) per slice
 
 ### 2. Add slice / lifecycle
 
@@ -125,7 +136,8 @@ Support lightweight command-style prompts that map to deterministic actions on a
 |---------|--------|----------------|-----------------|
 | `status` | Show timeline/program state | Program path or slug | Summarize slice counts by status, current blockers, and recommended next 1-2 slices. |
 | `next` | Advance to next unit of work | Program path or slug | Pick highest-priority `Ready` slice (respect execution order unless user override), then propose the exact next command (usually `openspec-propose`). |
-| `add <slice-id> "<title>"` | Add in-flight feature slice | Program + minimal slice details | Append a new slice block with minimum required fields, set initial status (usually `Ready`), and place it in execution order. |
+| `add <slice-id> "<title>"` | Add in-flight feature slice | Program + minimal slice details | Add a new slice block and place it at the best point in execution order (not necessarily next), with a short rationale. |
+| `add-next <slice-id> "<title>"` | Force immediate insertion | Program + minimal slice details | Add a new slice block and place it as the next executable slice in `Recommended Execution Order`, with a short rationale. |
 | `start <slice-id>` | Start a specific slice | Program + slice id | Validate slice exists and is actionable, then move lifecycle forward (or report blocker) and point to delegate skill. |
 | `update <slice-id> <status>` | Manual lifecycle update | Program + slice id + target status | Apply valid lifecycle transition, update progress log, and record linked artifact paths. |
 | `block <slice-id>` | Mark work as blocked | Program + slice id + blocking reason | Set `Blocked`, capture open question, and suggest an unblock path. |
@@ -139,6 +151,12 @@ Command handling rules:
 2. Keep command responses concise and operational: current state, decision, and exact next action.
 3. Never skip OpenSpec delegation steps: `openspec-propose` / `openspec-apply-change` / `openspec-archive-change`.
 4. Always update the register after any command that changes lifecycle state.
+5. For `add`, do not append blindly to the end. Evaluate dependencies, risk, and leverage against existing slices, then insert the slice at the most suitable position in `Recommended Execution Order`.
+6. When `add` causes reordering, explicitly report:
+   - inserted position (for example "placed after R03, before F04")
+   - concise rationale
+   - whether it changes the next recommended slice
+7. For `add-next`, insert as the nearest valid next position. If hard dependencies prevent immediate placement, do not force an invalid order; place it at the earliest valid slot and explain why.
 
 Deprecation policy:
 

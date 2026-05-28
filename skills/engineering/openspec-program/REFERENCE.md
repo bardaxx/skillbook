@@ -119,6 +119,18 @@ For every `Applied` slice, append:
 
 Do not add full-spec style sections by default.
 
+### Slice ID prefixes
+
+| Prefix | Use |
+|-------|-----|
+| `F` | Product feature slices |
+| `R` | Refactoring slices (no intended behavior change) |
+| `T` | Testing and quality slices |
+| `D` | Documentation-only slices |
+| `I` | Infrastructure/tooling slices (optional) |
+
+Use sequential numbering within each prefix (`F01`, `R02`, ...).
+
 ---
 
 ## Definition of done for `Applied`
@@ -149,7 +161,21 @@ Do not use the timeline flow for:
 
 - Add a new `### <ID> - <Title>` block with default timeline fields.
 - Default status is `Ready` unless implementation already started.
-- Insert item in `## Recommended Execution Order` with a short reason.
+- Insert item in `## Recommended Execution Order` at the best position, not automatically at the end.
+- Choose insertion position using:
+  - dependency readiness (must come after required prerequisites)
+  - risk reduction and unblock potential
+  - expected leverage for upcoming slices
+  - user urgency constraints, if provided
+- Record a short rationale near the updated execution order (for example: "Inserted F05 after R03 to reuse new interfaces and reduce rework before F06").
+- If insertion changes what should run next, explicitly state the new next slice.
+
+### Add-next for immediate placement
+
+- Use `add-next <slice-id> "<title>"` when the user explicitly wants the new slice as next work.
+- Insert the new slice at the nearest valid next position.
+- If dependencies block immediate placement, place at the earliest valid slot and explain the blocker.
+- Record a short rationale near the updated execution order.
 
 ### Deprecate instead of delete
 

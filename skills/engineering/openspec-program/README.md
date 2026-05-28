@@ -53,7 +53,8 @@ Common commands:
 
 - `status <program>`: summarize counts by status, blockers, and top recommended next slices.
 - `next <program>`: pick the highest-priority `Ready` slice (respecting execution order).
-- `add <program> <slice-id> "<title>"`: append a new slice with minimum required fields.
+- `add <program> <slice-id> "<title>"`: add a new slice with minimum required fields and insert it at the best position in execution order with rationale.
+- `add-next <program> <slice-id> "<title>"`: add a new slice and force it as next executable work (or earliest valid slot if dependencies block immediate placement).
 - `start <program> <slice-id>`: move a selected slice into the next actionable lifecycle step.
 - `update <program> <slice-id> <status>`: apply a lifecycle update and refresh progress log.
 - `block <program> <slice-id> "<reason>"`: mark a slice as blocked with recommendation.
@@ -98,13 +99,17 @@ Scenario: a PRD was decomposed into `openspec/TIMELINE_public-api-hardening.md`.
 
 7. Add a new in-flight feature request
    - Prompt: `add public-api-hardening F05 "Add rate-limit visibility endpoints"`
-   - Register update: append `F05` slice and insert it in execution order with a short scope-change note.
+   - Register update: add `F05` slice and place it in the best execution-order position (not always next), with a short scope-change note and rationale.
 
-8. Deprecate outdated work safely
-   - Prompt: `deprecate public-api-hardening L02 "Replaced by F05 scope"`
-   - Register update: keep `L02` in file, add deprecation note/date, remove from active execution order.
+8. Force-add a feature as next work
+   - Prompt: `add-next public-api-hardening F06 "Expose rate-limit headers in responses"`
+   - Register update: place `F06` as next executable slice, unless dependencies require an earlier prerequisite first.
 
-9. Continue flow
+9. Deprecate outdated work safely
+   - Prompt: `deprecate public-api-hardening R02 "Replaced by F05 scope"`
+   - Register update: keep `R02` in file, add deprecation note/date, remove from active execution order.
+
+10. Continue flow
    - Prompt: `status public-api-hardening`
    - Outcome: updated queue, active blockers, and next recommended slice.
 
@@ -116,7 +121,7 @@ Scenario: a PRD was decomposed into `openspec/TIMELINE_public-api-hardening.md`.
 | `openspec/config.yaml` | Token limits, loading scope, and timeline defaults |
 | `openspec/changes/<id>/` | OpenSpec artifacts per slice |
 
-Slice prefixes: **T** (behavior/tests), **L** (legacy/stabilization), **F** (product features). Number sequentially (`T01`, `L02`, …).
+Slice prefixes: **F** (feature), **R** (refactoring), **T** (testing), **D** (documentation), optional **I** (infrastructure/tooling). Number sequentially (`F01`, `R02`, …).
 
 Slice lifecycle: `Ready` → `Spec Proposed` → `Applying` → `Applied` → `Archived`, plus `Blocked`.
 

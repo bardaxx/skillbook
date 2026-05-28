@@ -274,7 +274,7 @@ Snippets and a routing table template: [REFERENCE.md — Agent docs snippet](REF
 
 - **OpenSpec:** tests and production behavior changes require a change under `openspec/changes/` before implementation.
 - **GitNexus:** explore + impact analysis before editing application symbols (see `AGENTS.md`).
-- **Domain language:** use terms from `CONTEXT.md` in slice text and when invoking propose.
+- **Domain language:** product terms from the consumer repo’s `CONTEXT.md`; workflow terms from [REFERENCE.md — Domain terms](REFERENCE.md#domain-terms).
 
 ## Related skills
 

@@ -40,8 +40,12 @@ openspec-program → update slice status + progress log
 |----------|------|
 | Timeline register | `openspec/TIMELINE_<context>.md` |
 | Timeline config | `openspec/config.yaml` |
+| Temporary program assets | `openspec/.temp_assets/` |
 
 Program files are **planning registers**, not OpenSpec changes. Do **not** duplicate proposal/design/tasks content from `openspec/changes/` into the register.
+
+Temporary working files used to prepare or apply slices (for example `audit.md`, checklists, scratch analysis notes, or intermediate outputs) must be stored under `openspec/.temp_assets/`.
+These files are ephemeral support artifacts and must not be committed.
 
 ## Token budget and loading scope
 
@@ -141,11 +145,12 @@ Create `openspec/TIMELINE_<context>.md` from a PRD or epic:
 1. Read PRD/issue, `CONTEXT.md` (domain terms), and `AGENTS.md` (OpenSpec + GitNexus gates).
 2. Choose `<context>` (short kebab-case or snake-case context label).
 3. Create or update `openspec/config.yaml` with default mode and token/context limits.
-4. Decompose into short, actionable slices.
-5. Write timeline sections per [REFERENCE.md](REFERENCE.md): header, how-to, status model, compacted history, slices, dependency map, recommended execution order, agent checklist.
-6. Link PRD at top (`PRD:` issue URL or path).
-7. **Register the workflow in agent docs** — see [Agent documentation](#agent-documentation) below.
-8. Do **not** run `openspec-propose` until user asks to start a slice.
+4. Ensure `.gitignore` contains `openspec/.temp_assets/` (create/update it if needed).
+5. Decompose into short, actionable slices.
+6. Write timeline sections per [REFERENCE.md](REFERENCE.md): header, how-to, status model, compacted history, slices, dependency map, recommended execution order, agent checklist.
+7. Link PRD at top (`PRD:` issue URL or path).
+8. **Register the workflow in agent docs** — see [Agent documentation](#agent-documentation) below.
+9. Do **not** run `openspec-propose` until user asks to start a slice.
 
 **Parameters** (adapt per program):
 
@@ -204,6 +209,7 @@ Command handling rules:
 14. For `next`, stop immediately on blocker, failed verification/tests, or missing required approval; record progress up to the reached step and return the stop reason with the exact next manual action.
 15. Do not chain propose + apply + archive in one command; keep explicit review checkpoints between gates.
 16. After every `propose`, `apply`, and `archive`, run the repository OpenSpec spec verification command; if it reports issues, resolve and re-run before proceeding.
+17. If temporary helper files are needed during program work, place them only under `openspec/.temp_assets/` and keep them out of version control via `.gitignore`.
 
 Deprecation policy:
 

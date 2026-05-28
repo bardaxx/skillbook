@@ -38,6 +38,20 @@ openspec_program:
 
 ---
 
+## Temporary assets policy
+
+When program execution requires temporary artifacts (for example `audit.md`, draft notes, interim checklists, or scratch outputs), store them under:
+
+- `openspec/.temp_assets/`
+
+Rules:
+
+- Do not place temporary program assets in `openspec/changes/` or alongside timeline files.
+- Ensure `.gitignore` contains `openspec/.temp_assets/` during bootstrap/initialization.
+- Treat this folder as ephemeral working state for definition/apply support files.
+
+---
+
 ## Timeline template (default)
 
 The default template is maintained only in [TIMELINE_SKELETON.md](TIMELINE_SKELETON.md).
@@ -204,6 +218,7 @@ Use `pending` for steps not yet reached.
 ```
 - [ ] `openspec/config.yaml` contains mode/token/loading limits
 - [ ] timeline file is named `openspec/TIMELINE_<context>.md`
+- [ ] `.gitignore` contains `openspec/.temp_assets/`
 - [ ] PRD/issue link at top
 - [ ] How-to + status model sections
 - [ ] Lite slices only (concise fields)

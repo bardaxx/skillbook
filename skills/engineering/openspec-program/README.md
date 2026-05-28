@@ -71,6 +71,8 @@ Notes:
 - Program selection is implicit by default. Ask for an explicit target only when multiple timeline files are plausible candidates.
 - `Candidate OpenSpec change id` must include the slice id as prefix: `<slice-id-lower>-<slice-title-kebab>` (for example `t10-audit-legacy-test-harness`).
 - On `reorder`, `add`, `add-next`, `update`, `deprecate`, or `restore`, if a non-applied slice (`Ready` or `Spec Proposed`) already has a change folder and the computed id changes, rename the folder and update links in the timeline.
+- Temporary artifacts used for planning/apply support (for example `audit.md`) must live in `openspec/.temp_assets/`.
+- During initialization/bootstrap, ensure `.gitignore` includes `openspec/.temp_assets/`.
 
 ## Example workflow with commands
 
@@ -156,6 +158,7 @@ This improves flow by reducing context switching, review/CI queue congestion, an
 | `openspec/TIMELINE_<context>.md` | Program timeline register (required naming) |
 | `openspec/config.yaml` | Token limits, loading scope, and timeline defaults |
 | `openspec/changes/<slice-id-lower>-<title-kebab>/` | OpenSpec artifacts per slice |
+| `openspec/.temp_assets/` | Temporary program support files (ignored) |
 
 Slice prefixes: **F** (feature), **R** (refactoring), **T** (testing), **D** (documentation), optional **I** (infrastructure/tooling). Number sequentially (`F01`, `R02`, …).
 

@@ -62,6 +62,14 @@ Use `openspec/config.yaml` to keep context bounded. Default to these constraints
 - **1:1** for implementable slices: each slice has a `Candidate OpenSpec change id` that becomes one change under `openspec/changes/`.
 - **Exception:** doc-only / audit slices may use a single `audit-*` change.
 
+### Change id naming rule (mandatory)
+
+- Always prefix `Candidate OpenSpec change id` with the slice id lowercased, followed by the slice title slug.
+- Format: `<slice-id-lower>-<slice-title-kebab>`.
+- Example: `T10 - audit legacy test harness` -> `t10-audit-legacy-test-harness`.
+- Keep `Spec link` aligned with the same id: `openspec/changes/<change-id>/`.
+- If the slice title changes while the slice is still non-executed (`Ready` or `Spec Proposed`), update both the candidate id and spec link to keep them aligned.
+
 ## Slice IDs
 
 | Prefix | Use |
@@ -114,6 +122,16 @@ Why this policy exists:
 - improves throughput by finishing slices to `Archived` instead of accumulating half-done work
 - keeps audit and rollback reasoning simple per slice/change
 
+## Spec verification gate (mandatory)
+
+Between `propose`, `apply`, and `archive`, always run the repository OpenSpec spec verification command and fix any issues before continuing.
+
+- after `openspec-propose`: verify spec health before moving to `openspec-apply-change`
+- after `openspec-apply-change`: verify spec health before moving to `openspec-archive-change`
+- after `openspec-archive-change`: verify spec health before selecting the next slice
+
+If verification fails, stop progression, resolve issues, re-run verification, then continue.
+
 ## Modes
 
 ### 1. Bootstrap
@@ -152,7 +170,7 @@ Support lightweight command-style prompts that map to deterministic actions on a
 |---------|--------|----------------|-----------------|
 | `status` | Show timeline/program state | none by default | Resolve active program and summarize slice counts by status, current blockers, and recommended next 1-2 slices. |
 | `next:dry` | Preview the next OpenSpec gate | none by default | Resolve the active slice and return exactly one next gate action (`propose` or `apply` or `archive`) without executing it. |
-| `next` | Execute one OpenSpec gate | none by default | Resolve the active slice and execute exactly one lifecycle gate: `Ready` -> run `openspec-propose`; `Spec Proposed` -> run `openspec-apply-change`; `Applied` -> run `openspec-archive-change`. Update register and stop. |
+| `next` | Execute one OpenSpec gate | none by default | Resolve the active slice and execute exactly one lifecycle gate: `Ready` -> run `openspec-propose`; `Spec Proposed` -> run `openspec-apply-change`; `Applied` -> run `openspec-archive-change`. Run OpenSpec spec verification after the gate, fix issues if any, update register, and stop. |
 | `add "<feature description>"` | Add in-flight feature slice | feature intent only | Generate a compliant slice id and concise title, create a new slice block with minimum fields, and place it at the best point in execution order (not necessarily next), with a short rationale. |
 | `add-next "<feature description>"` | Force immediate insertion | feature intent only | Generate a compliant slice id/title, create a new slice block, and place it as the next executable slice when valid; if dependencies block immediate insertion, place it at the earliest valid slot and mark it as forced in pipeline. |
 | `start <slice-id>` | Start a specific slice | slice id | Validate slice exists and is actionable, then move lifecycle forward (or report blocker) and point to delegate skill. |
@@ -177,10 +195,15 @@ Command handling rules:
    - whether it changes the next recommended slice
 9. For `add-next`, insert as the nearest valid next position. If hard dependencies prevent immediate placement, do not force an invalid order; place it at the earliest valid slot, explain why, and add a short note that it was forced in pipeline.
 10. For `update`, reject lifecycle-only edits; use it only for feature-scope updates on non-executed slices. If a slice is already `Applying`, `Applied`, or `Archived`, do not mutate scope and return a follow-up recommendation (for example create a new slice via `add`).
-11. For `deprecate` and `restore`, run reorder logic whenever queue consistency or priority is impacted.
-12. For `next`, execute one gate only and stop. Never chain propose + apply + archive in a single `next` call.
-13. For `next`, stop immediately on blocker, failed verification/tests, or missing required approval; record progress up to the reached step and return the stop reason with the exact next manual action.
-14. Do not chain propose + apply + archive in one command; keep explicit review checkpoints between gates.
+11. For `reorder`, `add`, `add-next`, `update`, `deprecate`, and `restore`, enforce folder-name consistency for non-applied slices only:
+   - if execution order or slice title changes and a related `openspec/changes/<change-id>/` folder already exists for a slice in `Ready` or `Spec Proposed`, rename that folder to the new `<slice-id-lower>-<slice-title-kebab>` value
+   - update `Candidate OpenSpec change id`, `Spec link`, and any in-register references accordingly
+   - do not rename folders for `Applying`, `Applied`, or `Archived` slices
+12. For `deprecate` and `restore`, run reorder logic whenever queue consistency or priority is impacted.
+13. For `next`, execute one gate only and stop. Never chain propose + apply + archive in a single `next` call.
+14. For `next`, stop immediately on blocker, failed verification/tests, or missing required approval; record progress up to the reached step and return the stop reason with the exact next manual action.
+15. Do not chain propose + apply + archive in one command; keep explicit review checkpoints between gates.
+16. After every `propose`, `apply`, and `archive`, run the repository OpenSpec spec verification command; if it reports issues, resolve and re-run before proceeding.
 
 Deprecation policy:
 

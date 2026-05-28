@@ -23,12 +23,20 @@ Keep entries concise. Do not duplicate proposal/design/tasks content.
 - Critical-domain cap (for example auth, payments, checkout): max **1** slice in `Applying`.
 - `next` remains atomic: one command moves one lifecycle gate for one slice.
 
+## Spec verification gate (mandatory)
+
+- Run the repository OpenSpec spec verification command after each lifecycle gate.
+- `propose` must be verified before `apply`.
+- `apply` must be verified before `archive`.
+- `archive` must be verified before selecting the next slice.
+- If verification reports issues, resolve them and re-run verification before continuing.
+
 ## Slices
 
 ### T01 - <short title>
 Status: `Ready`
 Goal: <1-2 lines>
-Candidate OpenSpec change id: `<kebab-case-change-id>`
+Candidate OpenSpec change id: `<slice-id-lower>-<slice-title-kebab>`
 Spec link: `openspec/changes/<change-id>/`
 Files:
 - `path/to/file.ts`

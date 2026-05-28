@@ -53,7 +53,7 @@ Common commands:
 
 - `status`: summarize counts by status, blockers, and top recommended next slices for the active program.
 - `next:dry`: resolve the active slice and show exactly one next gate action (`propose` or `apply` or `archive`) without executing it.
-- `next`: execute exactly one OpenSpec gate according to lifecycle state, then stop and update the register.
+- `next`: execute exactly one OpenSpec gate according to lifecycle state, run OpenSpec spec verification, fix issues if needed, then stop and update the register.
 - `add "<feature description>"`: add a new slice from intent. The skill generates slice id/title, fills minimum fields, and inserts it at the best position in execution order with rationale.
 - `add-next "<feature description>"`: same as `add`, but force placement as the next executable work item when valid. If dependencies prevent immediate placement, place it at the earliest valid slot and record that it was forced.
 - `start <slice-id>`: move a selected slice into the next actionable lifecycle step.
@@ -69,6 +69,8 @@ Notes:
 - Any lifecycle-changing command must update the register.
 - OpenSpec delegation remains mandatory (`openspec-propose` / `openspec-apply-change` / `openspec-archive-change`).
 - Program selection is implicit by default. Ask for an explicit target only when multiple timeline files are plausible candidates.
+- `Candidate OpenSpec change id` must include the slice id as prefix: `<slice-id-lower>-<slice-title-kebab>` (for example `t10-audit-legacy-test-harness`).
+- On `reorder`, `add`, `add-next`, `update`, `deprecate`, or `restore`, if a non-applied slice (`Ready` or `Spec Proposed`) already has a change folder and the computed id changes, rename the folder and update links in the timeline.
 
 ## Example workflow with commands
 
@@ -132,6 +134,7 @@ Behavior rules:
 
 - Program selection is implicit; ask only when multiple timeline candidates exist.
 - `next` executes one gate per call; `next:dry` previews one gate.
+- After every lifecycle gate (`propose`, `apply`, `archive`), run OpenSpec spec verification and resolve issues before proceeding.
 - `update` is for scope evolution, not lifecycle-only status edits.
 - `deprecate` and `restore` include reorder checks automatically.
 
@@ -152,7 +155,7 @@ This improves flow by reducing context switching, review/CI queue congestion, an
 |------|------|
 | `openspec/TIMELINE_<context>.md` | Program timeline register (required naming) |
 | `openspec/config.yaml` | Token limits, loading scope, and timeline defaults |
-| `openspec/changes/<id>/` | OpenSpec artifacts per slice |
+| `openspec/changes/<slice-id-lower>-<title-kebab>/` | OpenSpec artifacts per slice |
 
 Slice prefixes: **F** (feature), **R** (refactoring), **T** (testing), **D** (documentation), optional **I** (infrastructure/tooling). Number sequentially (`F01`, `R02`, …).
 

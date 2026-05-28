@@ -52,7 +52,7 @@ When needed, link to it and keep this document focused on rules, constraints, an
 |-------|----------|-------|
 | Status | Yes | One lifecycle value |
 | Goal | Yes | One short outcome statement |
-| Candidate OpenSpec change id | Yes | kebab-case; 1:1 with change dir |
+| Candidate OpenSpec change id | Yes | format `<slice-id-lower>-<slice-title-kebab>`; 1:1 with change dir |
 | Spec link | Yes | Path to the OpenSpec change dir |
 | Files | Yes | 1-5 starting files |
 | Notes | Optional | Keep to one short line |
@@ -71,6 +71,14 @@ Do not add full-spec style sections by default.
 | `I` | Infrastructure/tooling slices (optional) |
 
 Use sequential numbering within each prefix (`F01`, `R02`, ...).
+
+### Candidate change id format
+
+- Derive change ids from the slice id and title.
+- Required format: `<slice-id-lower>-<slice-title-kebab>`.
+- Example: `T10 - audit legacy test harness` -> `t10-audit-legacy-test-harness`.
+- Keep `Spec link` synchronized with the same id under `openspec/changes/`.
+- For non-applied slices only (`Ready`, `Spec Proposed`), if title/order updates imply a new id and a change folder already exists, rename that folder and update references in the timeline.
 
 ---
 
@@ -100,6 +108,18 @@ Why this matters:
 - reduces merge conflicts and rework from long-running concurrent implementation
 - improves completion rate by pushing slices to `Archived` faster
 - preserves clear per-slice auditability
+
+---
+
+## Mandatory spec verification between gates
+
+Always run the repository OpenSpec spec verification command between lifecycle gates and fix any issues before moving forward.
+
+- after `propose` and before `apply`
+- after `apply` and before `archive`
+- after `archive` and before picking the next slice
+
+Verification failures are blocking: resolve issues, re-run verification, then continue.
 
 ---
 
@@ -187,12 +207,13 @@ Use `pending` for steps not yet reached.
 - [ ] PRD/issue link at top
 - [ ] How-to + status model sections
 - [ ] Lite slices only (concise fields)
-- [ ] Candidate change ids are unique kebab-case
+- [ ] Candidate change ids are unique and follow `<slice-id-lower>-<slice-title-kebab>`
 - [ ] Dependencies map filled for active slices
 - [ ] Recommended execution order
 - [ ] Compacted history section present
 - [ ] Post-implementation reality check section present
 - [ ] WIP limit policy documented (`Applying` max and critical-area cap)
+- [ ] Mandatory OpenSpec spec verification gate documented between propose/apply/archive
 ```
 
 ---
@@ -222,6 +243,7 @@ Use this layer when a PRD or epic would otherwise become one oversized OpenSpec 
 - Implementable slices are **1:1** with OpenSpec changes (`Candidate OpenSpec change id`).
 - Slice lifecycle: `Ready` → `Spec Proposed` → `Applying` → `Applied` → `Archived` (`Blocked` when decisions are pending).
 - Keep `next` atomic (one gate per command) and enforce `Applying` WIP limits from the active timeline policy.
+- Run OpenSpec spec verification after each lifecycle gate and fix issues before the next gate.
 - Pick the next slice by priority and recommended execution order in the register.
 - Update the register after every propose, apply, and archive step.
 - Keep timeline entries concise and operational.

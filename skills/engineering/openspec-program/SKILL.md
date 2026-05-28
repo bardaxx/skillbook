@@ -98,6 +98,22 @@ Fixed lifecycle: `Ready` → `Spec Proposed` → `Applying` → `Applied` → `A
 
 Follow the **Agent update checklist** in [REFERENCE.md](REFERENCE.md) at each step.
 
+## Parallel execution policy
+
+OpenSpec supports multiple open changes, but lifecycle transitions must stay deterministic.
+
+- **Allow parallel proposals:** multiple slices can be in `Spec Proposed`.
+- **Limit active implementation:** keep at most **2** slices in `Applying` at once.
+- **Critical-area safeguard:** allow at most **1** `Applying` slice at a time for critical domains (for example payments, auth, checkout).
+- **Keep `next` atomic:** one `next` command moves exactly one lifecycle gate for one slice.
+
+Why this policy exists:
+
+- reduces context switching and hidden queueing in review/CI
+- limits merge conflicts and rework caused by long-lived concurrent branches
+- improves throughput by finishing slices to `Archived` instead of accumulating half-done work
+- keeps audit and rollback reasoning simple per slice/change
+
 ## Modes
 
 ### 1. Bootstrap
@@ -137,7 +153,6 @@ Support lightweight command-style prompts that map to deterministic actions on a
 | `status` | Show timeline/program state | none by default | Resolve active program and summarize slice counts by status, current blockers, and recommended next 1-2 slices. |
 | `next:dry` | Preview the next OpenSpec gate | none by default | Resolve the active slice and return exactly one next gate action (`propose` or `apply` or `archive`) without executing it. |
 | `next` | Execute one OpenSpec gate | none by default | Resolve the active slice and execute exactly one lifecycle gate: `Ready` -> run `openspec-propose`; `Spec Proposed` -> run `openspec-apply-change`; `Applied` -> run `openspec-archive-change`. Update register and stop. |
-| `next:autopilot` | Execute full OpenSpec flow | none by default | Resolve the active slice and run full flow (`openspec-propose` -> `openspec-apply-change` -> verify/test -> `openspec-archive-change`) with register updates after each gate. Stop on blocker, failed verification/tests, or missing required approval. |
 | `add "<feature description>"` | Add in-flight feature slice | feature intent only | Generate a compliant slice id and concise title, create a new slice block with minimum fields, and place it at the best point in execution order (not necessarily next), with a short rationale. |
 | `add-next "<feature description>"` | Force immediate insertion | feature intent only | Generate a compliant slice id/title, create a new slice block, and place it as the next executable slice when valid; if dependencies block immediate insertion, place it at the earliest valid slot and mark it as forced in pipeline. |
 | `start <slice-id>` | Start a specific slice | slice id | Validate slice exists and is actionable, then move lifecycle forward (or report blocker) and point to delegate skill. |
@@ -165,7 +180,7 @@ Command handling rules:
 11. For `deprecate` and `restore`, run reorder logic whenever queue consistency or priority is impacted.
 12. For `next`, execute one gate only and stop. Never chain propose + apply + archive in a single `next` call.
 13. For `next`, stop immediately on blocker, failed verification/tests, or missing required approval; record progress up to the reached step and return the stop reason with the exact next manual action.
-14. `next:autopilot` is the explicit opt-in mode for chaining gates end-to-end in one call. Keep `next` as single-gate by default.
+14. Do not chain propose + apply + archive in one command; keep explicit review checkpoints between gates.
 
 Deprecation policy:
 

@@ -85,6 +85,24 @@ A slice cannot be marked `Applied` unless:
 
 ---
 
+## Parallelism and WIP limits
+
+OpenSpec programs can run multiple slices in parallel, with controlled implementation concurrency.
+
+- Multiple slices may stay in `Spec Proposed`.
+- Keep a maximum of **2** slices in `Applying` globally.
+- For critical domains (for example auth, payments, checkout), keep a maximum of **1** slice in `Applying`.
+- Keep lifecycle transitions atomic: one command should move one gate for one slice.
+
+Why this matters:
+
+- prevents review and CI bottlenecks from too many active branches
+- reduces merge conflicts and rework from long-running concurrent implementation
+- improves completion rate by pushing slices to `Archived` faster
+- preserves clear per-slice auditability
+
+---
+
 ## Do-not-use gate
 
 Do not use the timeline flow for:
@@ -174,6 +192,7 @@ Use `pending` for steps not yet reached.
 - [ ] Recommended execution order
 - [ ] Compacted history section present
 - [ ] Post-implementation reality check section present
+- [ ] WIP limit policy documented (`Applying` max and critical-area cap)
 ```
 
 ---
@@ -202,6 +221,7 @@ Use this layer when a PRD or epic would otherwise become one oversized OpenSpec 
 - Program registers are planning files only — do not copy `proposal.md` / `design.md` / `tasks.md` into them.
 - Implementable slices are **1:1** with OpenSpec changes (`Candidate OpenSpec change id`).
 - Slice lifecycle: `Ready` → `Spec Proposed` → `Applying` → `Applied` → `Archived` (`Blocked` when decisions are pending).
+- Keep `next` atomic (one gate per command) and enforce `Applying` WIP limits from the active timeline policy.
 - Pick the next slice by priority and recommended execution order in the register.
 - Update the register after every propose, apply, and archive step.
 - Keep timeline entries concise and operational.

@@ -54,7 +54,6 @@ Common commands:
 - `status`: summarize counts by status, blockers, and top recommended next slices for the active program.
 - `next:dry`: resolve the active slice and show exactly one next gate action (`propose` or `apply` or `archive`) without executing it.
 - `next`: execute exactly one OpenSpec gate according to lifecycle state, then stop and update the register.
-- `next:autopilot`: run the full flow on the selected slice (`openspec-propose` -> `openspec-apply-change` -> verify/test -> `openspec-archive-change`) with register updates at each lifecycle step.
 - `add "<feature description>"`: add a new slice from intent. The skill generates slice id/title, fills minimum fields, and inserts it at the best position in execution order with rationale.
 - `add-next "<feature description>"`: same as `add`, but force placement as the next executable work item when valid. If dependencies prevent immediate placement, place it at the earliest valid slot and record that it was forced.
 - `start <slice-id>`: move a selected slice into the next actionable lifecycle step.
@@ -87,9 +86,9 @@ Scenario: a PRD was decomposed into `openspec/TIMELINE_public-api-hardening.md`.
    - Prompt: `next`
    - Outcome: runs only one gate (for example `openspec-propose`), updates lifecycle/progress, then stops for human review.
 
-4. Execute end-to-end (optional)
-   - Prompt: `next:autopilot`
-   - Outcome: runs propose/apply/verify/archive in sequence for the selected slice; updates lifecycle and progress at each step; stops early on blockers or failed checks.
+4. Continue with explicit gates
+   - Prompt: repeated `next`
+   - Outcome: each call advances a single gate and preserves review checkpoints between propose, apply, and archive.
 
 5. Add a new in-flight feature request
    - Prompt: `add "Add rate-limit visibility endpoints"`
@@ -120,7 +119,6 @@ Use this as a quick operational reference.
 | `status` | You need current program visibility | no args | Resolves active timeline and reports counts by status, blockers, and next recommended slices. |
 | `next:dry` | You want a preview before execution | no args | Resolves the active slice and returns one next gate action (`propose` or `apply` or `archive`) without executing it. |
 | `next` | You want controlled progress with review points | no args | Executes exactly one gate based on current state, updates register, and stops. Use repeated `next` calls to walk propose -> apply -> archive with human checkpoints. |
-| `next:autopilot` | You want end-to-end execution in one command | no args | Runs the full propose -> apply -> verify/test -> archive sequence, updates register at each step, and stops early on blockers or failed checks. |
 | `add "<feature description>"` | New feature work appears mid-program | free-form feature intent | Generates slice id and title, creates the slice with minimum fields, evaluates dependencies, and inserts it in the best execution position. |
 | `add-next "<feature description>"` | New feature is urgent and should run next | free-form feature intent | Same as `add`, but tries to place the new slice as next executable item. If blocked by dependencies, places at earliest valid slot and marks it as forced in pipeline. |
 | `start <slice-id>` | You need to move a specific slice into active execution | existing slice id | Advances the selected slice to the next actionable lifecycle state and points to required OpenSpec delegation steps. |
@@ -134,9 +132,19 @@ Behavior rules:
 
 - Program selection is implicit; ask only when multiple timeline candidates exist.
 - `next` executes one gate per call; `next:dry` previews one gate.
-- `next:autopilot` is explicit opt-in for end-to-end execution.
 - `update` is for scope evolution, not lifecycle-only status edits.
 - `deprecate` and `restore` include reorder checks automatically.
+
+## Parallelism and WIP
+
+Parallel implementation is supported, but intentionally constrained:
+
+- multiple slices can be in `Spec Proposed` at the same time
+- keep at most **2** slices in `Applying` globally
+- keep at most **1** `Applying` slice in critical domains (for example checkout, auth, payments)
+- keep `next` atomic (one gate for one slice) to maintain traceability
+
+This improves flow by reducing context switching, review/CI queue congestion, and merge conflict pressure while increasing completed slices (`Archived`) per cycle.
 
 ## Paths you should know
 

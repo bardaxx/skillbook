@@ -16,6 +16,13 @@ Keep entries concise. Do not duplicate proposal/design/tasks content.
 
 `Ready` -> `Spec Proposed` -> `Applying` -> `Applied` -> `Archived` (plus `Blocked`)
 
+## Parallelism and WIP limits
+
+- Multiple slices may be `Spec Proposed` in parallel.
+- Global cap: max **2** slices in `Applying`.
+- Critical-domain cap (for example auth, payments, checkout): max **1** slice in `Applying`.
+- `next` remains atomic: one command moves one lifecycle gate for one slice.
+
 ## Slices
 
 ### T01 - <short title>

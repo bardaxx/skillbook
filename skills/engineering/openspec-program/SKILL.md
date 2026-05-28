@@ -142,7 +142,7 @@ If verification fails, stop progression, resolve issues, re-run verification, th
 
 Create `openspec/TIMELINE_<context>.md` from a PRD or epic:
 
-1. Read PRD/issue, `CONTEXT.md` (domain terms), and `AGENTS.md` (OpenSpec + GitNexus gates).
+1. Read PRD/issue, the consumer repo’s `CONTEXT.md` (product terms), this skill’s [CONTEXT.md](CONTEXT.md) (workflow terms), and `AGENTS.md` (OpenSpec + GitNexus gates).
 2. Choose `<context>` (short kebab-case or snake-case context label).
 3. Create or update `openspec/config.yaml` with default mode and token/context limits.
 4. Ensure `.gitignore` contains `openspec/.temp_assets/` (create/update it if needed).
@@ -274,7 +274,7 @@ Snippets and a routing table template: [REFERENCE.md — Agent docs snippet](REF
 
 - **OpenSpec:** tests and production behavior changes require a change under `openspec/changes/` before implementation.
 - **GitNexus:** explore + impact analysis before editing application symbols (see `AGENTS.md`).
-- **Domain language:** use terms from `CONTEXT.md` in slice text and when invoking propose.
+- **Domain language:** product terms from the consumer repo’s `CONTEXT.md`; workflow terms from this skill’s [CONTEXT.md](CONTEXT.md).
 
 ## Related skills
 
@@ -298,4 +298,5 @@ Snippets and a routing table template: [REFERENCE.md — Agent docs snippet](REF
 ## Additional resources
 
 - Overview and intent (agents): [README.md](README.md)
+- Workflow domain terms: [CONTEXT.md](CONTEXT.md)
 - Program register template and checklists: [REFERENCE.md](REFERENCE.md)

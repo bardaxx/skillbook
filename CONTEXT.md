@@ -2,14 +2,14 @@
 
 Portable playbooks for coding agents: markdown instructions agents load to run repeatable workflows. This repository owns the skills, their buckets, and the catalog rules—not the application code of repos that install them.
 
-Domain terms below apply **here** (this catalog repository). Consumer repos (applications) may have their own `CONTEXT.md` for product language. Workflow-specific glossaries live with each skill (for example [openspec-program/REFERENCE.md](skills/engineering/openspec-program/REFERENCE.md#domain-terms)).
+Domain terms below apply **here** (this catalog repository). Consumer repos (applications) may have their own `CONTEXT.md` for product language. Workflow-specific glossaries live with each skill (for example [openspec-program/CONTEXT.md](skills/engineering/openspec-program/CONTEXT.md)).
 
 ## Language
 
 ### Catalog and layout
 
 **Skill**  
-A folder with a `SKILL.md` (required) plus optional `README.md`, `REFERENCE.md`, or scripts. The unit agents invoke by name or path.  
+A folder with a `SKILL.md` (required) plus optional `CONTEXT.md`, `README.md`, `REFERENCE.md`, or scripts. The unit agents invoke by name or path.  
 _Avoid_: command, plugin, rule (unless quoting a specific tool’s UI)
 
 **Bucket**  

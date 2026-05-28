@@ -45,6 +45,69 @@ Update the program register after each step
 
 You act as **program coordinator**: decomposition and bookkeeping only.
 
+## How to use command-style prompts
+
+The skill supports concise command-style prompts that map to deterministic register actions.
+
+Common commands:
+
+- `status <program>`: summarize counts by status, blockers, and top recommended next slices.
+- `next <program>`: pick the highest-priority `Ready` slice (respecting execution order).
+- `add <program> <slice-id> "<title>"`: append a new slice with minimum required fields.
+- `start <program> <slice-id>`: move a selected slice into the next actionable lifecycle step.
+- `update <program> <slice-id> <status>`: apply a lifecycle update and refresh progress log.
+- `block <program> <slice-id> "<reason>"`: mark a slice as blocked with recommendation.
+- `deprecate <program> <slice-id> "<reason>"`: remove slice from active plan without deleting history.
+- `restore <program> <slice-id>`: reactivate a deprecated slice and reinsert it in execution order.
+- `reorder <program>`: update Recommended Execution Order with a rationale note.
+
+Notes:
+
+- Prefer deprecating over deleting to preserve audit history.
+- Any lifecycle-changing command must update the register.
+- OpenSpec delegation remains mandatory (`openspec-propose` / `openspec-apply-change` / `openspec-archive-change`).
+
+## Example workflow with commands
+
+Scenario: a PRD was decomposed into `openspec/programs/public-api-hardening.md`.
+
+1. Check current state
+   - Prompt: `status public-api-hardening`
+   - Outcome: identifies `T03` as top `Ready` slice and highlights one blocked legacy item.
+
+2. Move to the next slice
+   - Prompt: `next public-api-hardening`
+   - Outcome: selects `T03`, suggests running `openspec-propose` with `t03-public-api-validation`.
+
+3. Create the spec for that slice
+   - Delegate: `openspec-propose` for `T03`
+   - Register update: set `T03` to `Spec Proposed`, add `openspec/changes/t03-public-api-validation/`.
+
+4. Start implementation
+   - Prompt: `start public-api-hardening T03`
+   - Delegate: `openspec-apply-change`
+   - Register update: set `T03` to `Applying`, add branch/agent context.
+
+5. Mark implementation completed
+   - Prompt: `update public-api-hardening T03 Applied`
+   - Register update: add validation commands and key changed files.
+
+6. Archive completed change
+   - Delegate: `openspec-archive-change`
+   - Register update: set `T03` to `Archived`, add archive path and date.
+
+7. Add a new in-flight feature request
+   - Prompt: `add public-api-hardening F05 "Add rate-limit visibility endpoints"`
+   - Register update: append `F05` slice and insert it in execution order with a short scope-change note.
+
+8. Deprecate outdated work safely
+   - Prompt: `deprecate public-api-hardening L02 "Replaced by F05 scope"`
+   - Register update: keep `L02` in file, add deprecation note/date, remove from active execution order.
+
+9. Continue flow
+   - Prompt: `status public-api-hardening`
+   - Outcome: updated queue, active blockers, and next recommended slice.
+
 ## Paths you should know
 
 | Path | Role |

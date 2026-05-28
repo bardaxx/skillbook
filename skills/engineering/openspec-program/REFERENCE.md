@@ -1,140 +1,106 @@
-# OpenSpec Program Register — Reference
+# OpenSpec Timeline Register — Reference
 
-Use this file when bootstrapping `openspec/programs/<slug>.md` or adding slices. Canonical legacy example: `openspec/TIMELINE_TEST.md`.
+Use this file when bootstrapping `openspec/TIMELINE_<context>.md` or adding slices.
 
 ---
 
-## Full register template
+## `openspec/config.yaml` baseline
 
-Copy and fill. Remove optional sections if unused.
+Use this baseline for token and loading limits.
+Treat this config as operational guidance only: do not regenerate, rewrite, or recreate OpenSpec specs from `openspec/config.yaml`.
+
+```yaml
+openspec_program:
+  mode: default
+  timeline:
+    filename_pattern: "TIMELINE_<context>.md"
+    path: "openspec/"
+  token_budget:
+    max_input_tokens: 18000
+    reserved_output_tokens: 4000
+  context_loading:
+    include_only:
+      - active_timeline_register
+      - selected_slice
+      - linked_openspec_change
+      - directly_referenced_files
+    load_full_prd_when: "slice_is_ambiguous"
+  pruning:
+    compact_history_after_archived_slices: 8
+  quality_gate:
+    applied_requires:
+      - tests_pass
+      - affected_specs_updated
+      - no_unrelated_files_changed
+      - acceptance_verified
+```
+
+---
+
+## Timeline template (default)
+
+This is the default and preferred template. Keep it concise.
+For a copy-ready file, use [TIMELINE_SKELETON.md](TIMELINE_SKELETON.md).
 
 ```markdown
-# <Program Title>
+# TIMELINE_<context>
 
 PRD: <issue URL, path, or "see conversation YYYY-MM-DD">
+This timeline is a short execution map used to generate OpenSpec changes per slice.
+Keep entries concise. Do not duplicate proposal/design/tasks content.
 
-This file tracks work decomposed from the PRD into independently proposable OpenSpec
-changes. It is a planning register, not an OpenSpec change.
+## How To Use This Timeline
 
-Use this file when asking an agent to pick up the next slice. Choose the highest-priority
-item marked `Ready`, create or update the matching OpenSpec change, implement only after
-the OpenSpec gate is satisfied, and update this register at each lifecycle step.
-
-## How To Use This Program
-
-1. Pick the highest-priority item with status `Ready` (see Recommended Execution Order).
-2. Create an OpenSpec change under `openspec/changes/` before implementation.
-3. Use canonical domain terms from `CONTEXT.md`.
-4. Run GitNexus exploration and impact analysis before modifying application symbols.
-5. Update slice status when the change is proposed, applied, and archived.
-6. Add links to the OpenSpec change, branch/PR, and tests as they become available.
-
-Documentation-only edits to this file do not require a separate OpenSpec change.
-Behavior, test, or production code changes do require OpenSpec.
+1. Pick the highest-priority `Ready` slice.
+2. Create/update one OpenSpec change for that slice.
+3. Move lifecycle forward and update the progress log.
+4. Keep scope limited to that slice.
 
 ## Status Model
 
-| Status | Meaning | Required register update |
-| --- | --- | --- |
-| `Ready` | Understood enough to propose an OpenSpec change. | None. |
-| `Spec Proposed` | Change exists under `openspec/changes/`. | Add change id/path. |
-| `Applying` | Implementation started from approved change. | Branch/agent notes if useful. |
-| `Applied` | Implementation and verification complete. | Test files + validation commands. |
-| `Archived` | Change archived after completion. | Archive path + date. |
-| `Blocked` | Needs product/domain/technical decision. | Blocking question + recommended answer. |
+`Ready` -> `Spec Proposed` -> `Applying` -> `Applied` -> `Archived` (plus `Blocked`)
 
-## Global Principles
+## Slices
 
-<!-- Optional. Delete section if N/A. -->
-
-- ...
-
-## Context Snapshot
-
-<!-- Optional: current state, known gaps, constraints relevant to all slices. -->
-
-- ...
-
-## Program
-
-<!-- Repeat per slice. Group under ## Timeline or ## Feature slices etc. if helpful. -->
-
-### T01 - <Short title>
-
+### T01 - <short title>
 Status: `Ready`
-
-Priority: P0
-
-Goal:
-<One paragraph: what this slice delivers.>
-
-Why it matters:
-<Risk or value; tie to PRD.user stories where useful.>
-
-Candidate OpenSpec change id:
-`<kebab-case-change-id>`
-
-Target behavior to specify:
-
-- ...
-- ...
-
-Likely test type:
-<Integration/E2E, unit, documentation-only, etc. — or "Likely verification" for non-test slices.>
-
-Files to inspect:
-
+Goal: <1-2 lines>
+Candidate OpenSpec change id: `<kebab-case-change-id>`
+Spec link: `openspec/changes/<change-id>/`
+Files:
 - `path/to/file.ts`
-- ...
-
-Notes:
-<Decisions deferred to OpenSpec, doc/code mismatches, etc.>
-
-Open question:
-<If any. Recommended answer on next line.>
-
-Progress log:
-
+Notes: <one short line or "none">
+Progress:
 - Proposed: pending
 - Applying: pending
 - Applied: pending
 - Archived: pending
 
+## Dependencies
+
+### T01
+Depends on: none
+Blocks: T02
+Can run in parallel: no
+
 ## Recommended Execution Order
 
-1. T01 - ...
-2. T02 - ...
+1. T01 - <short title>
+2. T02 - <short title>
 
-The order may change if urgency shifts. When reordering, update this section and add a
-short note explaining why.
+## Compacted history
 
-## Agent Update Checklist
+Keep only short archived summaries after the configured threshold.
 
-When proposing a spec:
+- <slice-id> -> <outcome> -> <changed files> -> <validation>
 
-- Change the item status to `Spec Proposed`.
-- Add the OpenSpec change id/path.
-- Add unresolved questions under the item, if any.
+## Post-implementation reality check
 
-When applying a spec:
+For every `Applied` slice, append:
 
-- Change the item status to `Applying`.
-- Add branch or working context if useful.
-- Keep scope tied to that slice unless the OpenSpec change says otherwise.
-
-When implementation is done:
-
-- Change the item status to `Applied`.
-- Add test files created or changed.
-- Add validation commands and results.
-- Note production code changed to make tests pass.
-
-When archiving:
-
-- Change the item status to `Archived`.
-- Add archive path and date.
-- If follow-up work remains, create a new slice or update an existing one — do not
-  hide follow-ups only in the progress log.
+- What changed from original plan:
+- Unexpected issues:
+- Follow-up needed:
 ```
 
 ---
@@ -143,45 +109,62 @@ When archiving:
 
 | Field | Required | Notes |
 |-------|----------|-------|
-| Status | Yes | One of the fixed lifecycle values |
-| Priority | Yes | Default P0 / P1 / P2 |
-| Goal | Yes | Outcome-oriented |
-| Why it matters | Yes | Ties slice to PRD risk/value |
+| Status | Yes | One lifecycle value |
+| Goal | Yes | One short outcome statement |
 | Candidate OpenSpec change id | Yes | kebab-case; 1:1 with change dir |
-| Target behavior to specify | Yes | Bullet list for propose input |
-| Likely test type | Yes* | *Or "Likely verification" for audit/doc slices |
-| Files to inspect | Yes | Starting points for propose/apply |
-| Notes / Open question | If needed | Product or technical forks |
-| Progress log | Yes | Update at each lifecycle step |
+| Spec link | Yes | Path to the OpenSpec change dir |
+| Files | Yes | 1-5 starting files |
+| Notes | Optional | Keep to one short line |
+| Progress | Yes | Update at each lifecycle step |
+
+Do not add full-spec style sections by default.
+
+---
+
+## Definition of done for `Applied`
+
+A slice cannot be marked `Applied` unless:
+
+- tests pass
+- affected docs/specs are updated
+- no unrelated files changed
+- spec acceptance criteria are verified
+
+---
+
+## Do-not-use gate
+
+Do not use the timeline flow for:
+
+- bugfixes under 30 minutes
+- isolated copy/UI changes
+- one-file refactors
+- exploratory spikes
 
 ---
 
 ## Scope changes in timeline
 
-Use these patterns when program scope changes after bootstrap.
-
 ### Add a new in-flight feature
 
-- Add a new `### <ID> - <Title>` block with all minimum fields.
-- Default status is `Ready` unless implementation is already underway and an OpenSpec change already exists.
-- Insert the item in `## Recommended Execution Order` with a short note when added due to scope change.
+- Add a new `### <ID> - <Title>` block with default timeline fields.
+- Default status is `Ready` unless implementation already started.
+- Insert item in `## Recommended Execution Order` with a short reason.
 
 ### Deprecate instead of delete
 
-When a slice is no longer planned, keep it for audit history:
-
-- Keep the slice block in place (do not remove historical context).
-- Add a clear marker in `Notes`, for example: `Deprecated on YYYY-MM-DD: <reason>`.
-- Add a progress entry, for example: `- Deprecated: YYYY-MM-DD (<reason>)`.
-- Remove the item from active `Recommended Execution Order` and note any replacement slice.
+- Keep the slice block in place.
+- Add `Deprecated on YYYY-MM-DD: <reason>` in `Notes`.
+- Remove from active `Recommended Execution Order`.
+- Add a compacted-history entry if needed.
 
 ### Restore a deprecated slice
 
-- Remove or supersede the deprecation note with a restore note.
-- Set status back to an actionable value (usually `Ready`).
+- Add `Restored on YYYY-MM-DD` note.
+- Set status back to actionable value (usually `Ready`).
 - Reinsert into `Recommended Execution Order`.
 
-Hard deletion of a slice is allowed only when explicitly requested by the user.
+Hard deletion is allowed only when explicitly requested by the user.
 
 ---
 
@@ -214,21 +197,17 @@ Use `pending` for steps not yet reached.
 ## Bootstrap checklist
 
 ```
+- [ ] `openspec/config.yaml` contains mode/token/loading limits
+- [ ] timeline file is named `openspec/TIMELINE_<context>.md`
 - [ ] PRD/issue link at top
 - [ ] How-to + status model sections
-- [ ] Optional principles + context snapshot
-- [ ] All slices with IDs (T/L/F) and minimum fields
+- [ ] Lite slices only (concise fields)
 - [ ] Candidate change ids are unique kebab-case
+- [ ] Dependencies map filled for active slices
 - [ ] Recommended execution order
-- [ ] Agent update checklist (can copy from template)
-- [ ] No OpenSpec artifact duplication
+- [ ] Compacted history section present
+- [ ] Post-implementation reality check section present
 ```
-
----
-
-## Legacy path
-
-`openspec/TIMELINE_TEST.md` uses the same register shape. New PRD-linked programs prefer `openspec/programs/<slug>.md`. Do not migrate legacy files unless the user asks.
 
 ---
 
@@ -246,7 +225,7 @@ Use this layer when a PRD or epic would otherwise become one oversized OpenSpec 
 | Step | What | Where |
 |------|------|--------|
 | 1 | PRD or issue | Issue tracker / `PRD.md` file |
-| 2 | Decompose into prioritized slices | `openspec/programs/<slug>.md` (legacy example: `openspec/TIMELINE_TEST.md`) |
+| 2 | Decompose into prioritized slices | `openspec/TIMELINE_<context>.md` |
 | 3 | Per slice with status `Ready` | `openspec-propose` → `openspec/changes/<change-id>/` |
 | 4 | Implement | `openspec-apply-change` (slice → `Applying` → `Applied`) |
 | 5 | Complete | `openspec-archive-change` (slice → `Archived`) |
@@ -258,6 +237,8 @@ Use this layer when a PRD or epic would otherwise become one oversized OpenSpec 
 - Slice lifecycle: `Ready` → `Spec Proposed` → `Applying` → `Applied` → `Archived` (`Blocked` when decisions are pending).
 - Pick the next slice by priority and recommended execution order in the register.
 - Update the register after every propose, apply, and archive step.
+- Keep timeline entries concise and operational.
+- Enforce context/token limits via `openspec/config.yaml`.
 
 **Skill**
 
@@ -274,7 +255,7 @@ Add when bootstrapping or when the repo tracks multiple programs:
 ```markdown
 ### Active OpenSpec programs
 
-- `<slug>` — `openspec/programs/<slug>.md` (PRD: <link>)
+- `<context>` — `openspec/TIMELINE_<context>.md` (PRD: <link>)
 ```
 
 ### Routing table variant (GitNexus-style repos)

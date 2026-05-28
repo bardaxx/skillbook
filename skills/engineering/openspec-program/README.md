@@ -19,7 +19,7 @@ This skill adds a **program register**: a markdown file listing slices and statu
 
 | Situation | What to do |
 |-----------|------------|
-| PRD exists, no execution plan | **Bootstrap** → `openspec/programs/<slug>.md` |
+| PRD exists, no execution plan | **Bootstrap** → `openspec/TIMELINE_<context>.md` |
 | Operator asks what is next | Pick highest-priority slice with status `Ready` |
 | Slice is `Ready` | Run `openspec-propose` (1:1 slice → change id) |
 | Change approved / implementing | Run `openspec-apply-change`; set slice `Applying` |
@@ -33,7 +33,7 @@ The register is a **map and status board**, not a copy of `proposal.md` or `task
 ```
 PRD or tracked issue
         ↓
-openspec-program  →  openspec/programs/<slug>.md
+openspec-program  →  openspec/TIMELINE_<context>.md
         ↓
 For each slice marked Ready:
         openspec-propose  →  openspec/changes/<id>/
@@ -69,7 +69,7 @@ Notes:
 
 ## Example workflow with commands
 
-Scenario: a PRD was decomposed into `openspec/programs/public-api-hardening.md`.
+Scenario: a PRD was decomposed into `openspec/TIMELINE_public-api-hardening.md`.
 
 1. Check current state
    - Prompt: `status public-api-hardening`
@@ -112,13 +112,26 @@ Scenario: a PRD was decomposed into `openspec/programs/public-api-hardening.md`.
 
 | Path | Role |
 |------|------|
-| `openspec/programs/<slug>.md` | Program register (preferred for new work) |
-| `openspec/TIMELINE_TEST.md` | Legacy example of the same register shape |
+| `openspec/TIMELINE_<context>.md` | Program timeline register (required naming) |
+| `openspec/config.yaml` | Token limits, loading scope, and timeline defaults |
 | `openspec/changes/<id>/` | OpenSpec artifacts per slice |
 
 Slice prefixes: **T** (behavior/tests), **L** (legacy/stabilization), **F** (product features). Number sequentially (`T01`, `L02`, …).
 
 Slice lifecycle: `Ready` → `Spec Proposed` → `Applying` → `Applied` → `Archived`, plus `Blocked`.
+
+## Default operating profile
+
+- Use concise timeline entries by default.
+- Keep each slice short and operational (goal, spec link, files, status, short notes).
+- Enforce context loading from `openspec/config.yaml`:
+  - active timeline
+  - selected slice
+  - linked OpenSpec change
+  - directly referenced files
+- Do not load full PRD unless the slice is ambiguous.
+- Treat `openspec/config.yaml` as reference-only guidance; never use it to recreate or rewrite OpenSpec specs.
+- Do not use this flow for small work (quick bugfixes, one-file refactors, isolated UI copy edits, exploratory spikes).
 
 ## Repository setup (first use)
 
@@ -138,12 +151,13 @@ Do not assume other agents will read this folder unless the repo instructions te
 |------|-----|
 | [SKILL.md](SKILL.md) | Procedures, modes, gates — your primary instruction set |
 | [REFERENCE.md](REFERENCE.md) | Register template, agent-doc snippets, checklists |
+| [TIMELINE_SKELETON.md](TIMELINE_SKELETON.md) | Copy-ready default timeline skeleton |
 | [README.md](README.md) | Intent and mental model (this file) |
 
 ## Example prompts you should handle
 
 **Decompose a PRD**  
-Bootstrap `openspec/programs/<slug>.md`, add slices with goals and candidate change ids, set execution order, register repo agent instructions, then wait before proposing unless asked to start.
+Bootstrap `openspec/TIMELINE_<context>.md`, add concise default slices with goals and candidate change ids, set execution order, register repo agent instructions, then wait before proposing unless asked to start.
 
 **What is next?**  
 Read the program file, select the highest-priority `Ready` slice, invoke `openspec-propose` with that slice’s target behavior and change id.
@@ -155,6 +169,6 @@ Set slice to `Archived`, update progress log with archive path and date, surface
 
 - Replacing `openspec-propose`, apply, or archive.
 - Storing full OpenSpec content in the program register.
-- Using “timeline” as the product name — the register is an implementation detail; the idea is **program decomposition from a PRD**.
+- Writing verbose, spec-like prose in timeline files.
 
 Full procedures: [SKILL.md](SKILL.md). Templates and instruction-file snippets: [REFERENCE.md](REFERENCE.md).

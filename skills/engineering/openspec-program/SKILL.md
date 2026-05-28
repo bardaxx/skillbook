@@ -7,13 +7,13 @@ description: Decomposes a PRD or large epic into a prioritized OpenSpec executio
 
 Bridge **PRD / large epic** → **multiple OpenSpec changes** using a **program register** file. Do not replace OpenSpec CLI skills (`openspec-propose`, `openspec-apply-change`, `openspec-archive-change`); orchestrate them and keep the register current.
 
-Register format and templates: [REFERENCE.md](REFERENCE.md). Legacy example: `openspec/TIMELINE_TEST.md`.
+Register format and templates: [REFERENCE.md](REFERENCE.md). Register files must be timeline files named `openspec/TIMELINE_<context>.md`.
 
 ## When to use
 
 | Situation | Action |
 |-----------|--------|
-| PRD exists, no execution plan | **Bootstrap** → `openspec/programs/<slug>.md` |
+| PRD exists, no execution plan | **Bootstrap** → `openspec/TIMELINE_<context>.md` |
 | Need next unit of work | Pick highest-priority slice with status `Ready` |
 | Slice is `Ready` | Delegate to `openspec-propose` (1:1 slice → change) |
 | Change approved / implementing | Delegate to `openspec-apply-change`; set slice `Applying` |
@@ -25,7 +25,7 @@ Register format and templates: [REFERENCE.md](REFERENCE.md). Legacy example: `op
 ```
 `PRD.md` file / tracked issue
     ↓
-openspec-program → openspec/programs/<slug>.md (slices)
+openspec-program → openspec/TIMELINE_<context>.md (concise slices)
     ↓ (per slice, status Ready)
 openspec-propose → openspec/changes/<change-id>/
 openspec-apply-change → implementation
@@ -38,10 +38,24 @@ openspec-program → update slice status + progress log
 
 | Artifact | Path |
 |----------|------|
-| New program registers | `openspec/programs/<slug>.md` |
-| Legacy reference | `openspec/TIMELINE_TEST.md` (format only; do not rename unless asked) |
+| Timeline register | `openspec/TIMELINE_<context>.md` |
+| Timeline config | `openspec/config.yaml` |
 
 Program files are **planning registers**, not OpenSpec changes. Do **not** duplicate proposal/design/tasks content from `openspec/changes/` into the register.
+
+## Token budget and loading scope
+
+Use `openspec/config.yaml` to keep context bounded. Default to these constraints unless the repo has stricter values:
+
+- Mode: default timeline format (preferred).
+- Load only:
+  - active timeline register
+  - selected slice
+  - linked OpenSpec change
+  - directly referenced files
+- Do not load the full PRD unless the selected slice is ambiguous.
+- Respect token ceilings from config before adding optional context.
+- `openspec/config.yaml` is reference-only guidance for limits and loading; it must never be used to regenerate, rewrite, or recreate OpenSpec specs.
 
 ## Slice ↔ change
 
@@ -77,15 +91,16 @@ Follow the **Agent update checklist** in [REFERENCE.md](REFERENCE.md) at each st
 
 ### 1. Bootstrap
 
-Create `openspec/programs/<slug>.md` from a PRD or epic:
+Create `openspec/TIMELINE_<context>.md` from a PRD or epic:
 
 1. Read PRD/issue, `CONTEXT.md` (domain terms), and `AGENTS.md` (OpenSpec + GitNexus gates).
-2. Choose `<slug>` (kebab-case, e.g. `test-coverage`, `public-proposal-hardening`).
-3. Decompose into slices (`T` / `L` / `F`) with priorities (default P0–P2).
-4. Write register sections per [REFERENCE.md](REFERENCE.md): header, how-to, status model, optional global principles, coverage/context snapshot, slices, recommended execution order, agent checklist.
-5. Link PRD at top (`PRD:` issue URL or path).
-6. **Register the workflow in agent docs** — see [Agent documentation](#agent-documentation) below.
-7. Do **not** run `openspec-propose` until user asks to start a slice.
+2. Choose `<context>` (short kebab-case or snake-case context label).
+3. Create or update `openspec/config.yaml` with default mode and token/context limits.
+4. Decompose into short, actionable slices.
+5. Write timeline sections per [REFERENCE.md](REFERENCE.md): header, how-to, status model, compacted history, slices, dependency map, recommended execution order, agent checklist.
+6. Link PRD at top (`PRD:` issue URL or path).
+7. **Register the workflow in agent docs** — see [Agent documentation](#agent-documentation) below.
+8. Do **not** run `openspec-propose` until user asks to start a slice.
 
 **Parameters** (adapt per program):
 
@@ -97,7 +112,7 @@ Create `openspec/programs/<slug>.md` from a PRD or epic:
 
 ### 2. Add slice / lifecycle
 
-- **Add slice:** append one `### <ID> - Title` block with all required fields (see REFERENCE).
+- **Add slice:** append one `### <ID> - Title` block using the default skeleton (see REFERENCE).
 - **Update lifecycle:** change status and progress log only; link paths, do not copy OpenSpec artifacts.
 - **Pick next:** highest priority among `Ready`, respecting execution order unless user overrides.
 - **Reorder:** update Recommended Execution Order + short note why.
@@ -134,7 +149,18 @@ Deprecation policy:
 
 ## Per-slice minimum fields
 
-Status, Priority, Goal, Why it matters, Candidate OpenSpec change id, Target behavior to specify, Likely test type (or Likely verification for non-test), Files to inspect, Notes/Open question, Progress log.
+Lite mode fields only: Status, Goal, Candidate OpenSpec change id, Spec link, Files to inspect, Notes, Progress log.
+
+Do not switch to a full template by default. Keep timeline entries short and operational.
+
+## Anti-overengineering gate
+
+Do not use `openspec-program` for:
+
+- bugfixes under 30 minutes
+- isolated copy/UI tweaks
+- one-file refactors
+- exploratory spikes
 
 ## Repository agent instructions
 
@@ -145,7 +171,7 @@ Coding agents discover repo rules from **repository agent instruction files** (c
 | Trigger | Action |
 |---------|--------|
 | Skill copied into repo for the first time | Add or merge **OpenSpec Program** section in agent instruction files |
-| Bootstrap of a new `openspec/programs/<slug>.md` | Add active program pointer if the repo lists active programs |
+| Bootstrap of a new `openspec/TIMELINE_<context>.md` | Add active timeline pointer if the repo lists active programs |
 | User asks only for lifecycle on an existing program | Update register only; skip instruction files unless section is missing |
 
 ### Files to patch
@@ -159,15 +185,17 @@ Use the **skill path actually installed** in routing tables (e.g. `.agents/skill
 ### What instruction files must say
 
 - Large PRD/epic work uses **`openspec-program`** before multiple `openspec-propose` calls.
-- Registers live at `openspec/programs/<slug>.md` (legacy: `openspec/TIMELINE_TEST.md`).
+- Registers live at `openspec/TIMELINE_<context>.md`.
 - One implementable slice → one OpenSpec change; program file tracks status, not artifact content.
 - After propose / apply / archive, update the register and delegate to the OpenSpec CLI skills.
+- Timeline uses the default concise format.
+- Token budget is enforced via `openspec/config.yaml`.
 
 ### Idempotency
 
 - If the **OpenSpec Program** subsection already exists and matches, do not duplicate.
 - If wording differs only slightly, reconcile to one canonical block and mirror to secondary entrypoints.
-- List active programs in instruction files only when useful (e.g. link `openspec/programs/<slug>.md` in a short bullet).
+- List active timelines in instruction files only when useful (e.g. link `openspec/TIMELINE_<context>.md` in a short bullet).
 
 Snippets and a routing table template: [REFERENCE.md — Agent docs snippet](REFERENCE.md#agent-docs-snippet).
 
@@ -190,7 +218,7 @@ Snippets and a routing table template: [REFERENCE.md — Agent docs snippet](REF
 
 ## Anti-patterns
 
-- Naming the skill or register around “timeline” as the product concept — use **program** / **decomposition**.
+- Using verbose, spec-like prose inside timeline files.
 - One mega OpenSpec change for an entire PRD when slices are independent.
 - Duplicating `proposal.md` / `design.md` / `tasks.md` content in the program file.
 - Skipping register updates after propose / apply / archive.

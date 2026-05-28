@@ -134,29 +134,35 @@ Support lightweight command-style prompts that map to deterministic actions on a
 
 | Command | Intent | Required input | Expected action |
 |---------|--------|----------------|-----------------|
-| `status` | Show timeline/program state | Program path or slug | Summarize slice counts by status, current blockers, and recommended next 1-2 slices. |
-| `next` | Advance to next unit of work | Program path or slug | Pick highest-priority `Ready` slice (respect execution order unless user override), then propose the exact next command (usually `openspec-propose`). |
-| `add <slice-id> "<title>"` | Add in-flight feature slice | Program + minimal slice details | Add a new slice block and place it at the best point in execution order (not necessarily next), with a short rationale. |
-| `add-next <slice-id> "<title>"` | Force immediate insertion | Program + minimal slice details | Add a new slice block and place it as the next executable slice in `Recommended Execution Order`, with a short rationale. |
-| `start <slice-id>` | Start a specific slice | Program + slice id | Validate slice exists and is actionable, then move lifecycle forward (or report blocker) and point to delegate skill. |
-| `update <slice-id> <status>` | Manual lifecycle update | Program + slice id + target status | Apply valid lifecycle transition, update progress log, and record linked artifact paths. |
-| `block <slice-id>` | Mark work as blocked | Program + slice id + blocking reason | Set `Blocked`, capture open question, and suggest an unblock path. |
-| `deprecate <slice-id>` | Remove from active timeline safely | Program + slice id + reason | Mark slice as deprecated in-place (without deleting history), remove it from active execution order, and log replacement/follow-up if any. |
-| `restore <slice-id>` | Re-activate deprecated slice | Program + slice id | Clear deprecation marker, choose lifecycle status (usually `Ready`), and reinsert in execution order. |
-| `reorder` | Re-prioritize queue | Program + ordering rationale | Update Recommended Execution Order and add a short reason note. |
+| `status` | Show timeline/program state | none by default | Resolve active program and summarize slice counts by status, current blockers, and recommended next 1-2 slices. |
+| `next:dry` | Plan next unit of work | none by default | Pick highest-priority `Ready` slice (respect execution order unless user override), then return exact next actions without running delegation steps. |
+| `next` | Execute the next unit end-to-end | none by default | Resolve next actionable slice and run full flow: `openspec-propose` -> `openspec-apply-change` -> verify/test -> `openspec-archive-change`, updating register lifecycle/progress after each step. |
+| `add "<feature description>"` | Add in-flight feature slice | feature intent only | Generate a compliant slice id and concise title, create a new slice block with minimum fields, and place it at the best point in execution order (not necessarily next), with a short rationale. |
+| `add-next "<feature description>"` | Force immediate insertion | feature intent only | Generate a compliant slice id/title, create a new slice block, and place it as the next executable slice when valid; if dependencies block immediate insertion, place it at the earliest valid slot and mark it as forced in pipeline. |
+| `start <slice-id>` | Start a specific slice | slice id | Validate slice exists and is actionable, then move lifecycle forward (or report blocker) and point to delegate skill. |
+| `update <slice-id> "<feature delta>"` | Update scope of a planned slice | slice id + scope delta | Allowed only for non-executed slices (typically `Ready` or `Spec Proposed`): update goal/files/notes from the new intent, re-evaluate dependencies, and reorder execution as needed. |
+| `block <slice-id>` | Mark work as blocked | slice id + blocking reason | Set `Blocked`, capture open question, and suggest an unblock path. |
+| `deprecate <slice-id>` | Remove from active timeline safely | slice id + reason | Mark slice as deprecated in-place (without deleting history), remove it from active execution order, log replacement/follow-up if any, and reorder remaining queue when needed. |
+| `restore <slice-id>` | Re-activate deprecated slice | slice id | Clear deprecation marker, choose lifecycle status (usually `Ready`), reinsert in execution order, and reorder if needed. |
+| `reorder` | Re-prioritize queue | ordering rationale | Update Recommended Execution Order and add a short reason note. |
 
 Command handling rules:
 
-1. If no program is provided, resolve active program from context; if ambiguous, ask for the target file once.
-2. Keep command responses concise and operational: current state, decision, and exact next action.
-3. Never skip OpenSpec delegation steps: `openspec-propose` / `openspec-apply-change` / `openspec-archive-change`.
-4. Always update the register after any command that changes lifecycle state.
-5. For `add`, do not append blindly to the end. Evaluate dependencies, risk, and leverage against existing slices, then insert the slice at the most suitable position in `Recommended Execution Order`.
-6. When `add` causes reordering, explicitly report:
+1. Resolve the active program from context by default.
+2. If multiple timeline files are plausible candidates, ask the user to choose exactly once before proceeding.
+3. Keep command responses concise and operational: current state, decision, and exact next action.
+4. Never skip OpenSpec delegation steps: `openspec-propose` / `openspec-apply-change` / `openspec-archive-change`.
+5. Always update the register after any command that changes lifecycle state.
+6. For `add` and `add-next`, do not require user-provided slice id or title. Generate both from intent using the repository prefix/sequence rules and preserve uniqueness.
+7. For `add`, do not append blindly to the end. Evaluate dependencies, risk, and leverage against existing slices, then insert the slice at the most suitable position in `Recommended Execution Order`.
+8. When `add` or `add-next` causes reordering, explicitly report:
    - inserted position (for example "placed after R03, before F04")
    - concise rationale
    - whether it changes the next recommended slice
-7. For `add-next`, insert as the nearest valid next position. If hard dependencies prevent immediate placement, do not force an invalid order; place it at the earliest valid slot and explain why.
+9. For `add-next`, insert as the nearest valid next position. If hard dependencies prevent immediate placement, do not force an invalid order; place it at the earliest valid slot, explain why, and add a short note that it was forced in pipeline.
+10. For `update`, reject lifecycle-only edits; use it only for feature-scope updates on non-executed slices. If a slice is already `Applying`, `Applied`, or `Archived`, do not mutate scope and return a follow-up recommendation (for example create a new slice via `add`).
+11. For `deprecate` and `restore`, run reorder logic whenever queue consistency or priority is impacted.
+12. For `next`, stop immediately on blocker, failed verification/tests, or missing required approval; record progress up to the reached step and return the stop reason with the exact next manual action.
 
 Deprecation policy:
 

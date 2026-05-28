@@ -51,67 +51,85 @@ The skill supports concise command-style prompts that map to deterministic regis
 
 Common commands:
 
-- `status <program>`: summarize counts by status, blockers, and top recommended next slices.
-- `next <program>`: pick the highest-priority `Ready` slice (respecting execution order).
-- `add <program> <slice-id> "<title>"`: add a new slice with minimum required fields and insert it at the best position in execution order with rationale.
-- `add-next <program> <slice-id> "<title>"`: add a new slice and force it as next executable work (or earliest valid slot if dependencies block immediate placement).
-- `start <program> <slice-id>`: move a selected slice into the next actionable lifecycle step.
-- `update <program> <slice-id> <status>`: apply a lifecycle update and refresh progress log.
-- `block <program> <slice-id> "<reason>"`: mark a slice as blocked with recommendation.
-- `deprecate <program> <slice-id> "<reason>"`: remove slice from active plan without deleting history.
-- `restore <program> <slice-id>`: reactivate a deprecated slice and reinsert it in execution order.
-- `reorder <program>`: update Recommended Execution Order with a rationale note.
+- `status`: summarize counts by status, blockers, and top recommended next slices for the active program.
+- `next:dry`: pick the highest-priority `Ready` slice and return the exact next actions without executing delegation steps.
+- `next`: run the full flow on the selected next slice (`openspec-propose` -> `openspec-apply-change` -> verify/test -> `openspec-archive-change`) with register updates at each lifecycle step.
+- `add "<feature description>"`: add a new slice from intent. The skill generates slice id/title, fills minimum fields, and inserts it at the best position in execution order with rationale.
+- `add-next "<feature description>"`: same as `add`, but force placement as the next executable work item when valid. If dependencies prevent immediate placement, place it at the earliest valid slot and record that it was forced.
+- `start <slice-id>`: move a selected slice into the next actionable lifecycle step.
+- `update <slice-id> "<feature delta>"`: update feature scope for a non-executed slice (for example `A+B` -> `A+B+C`), then re-evaluate dependencies and execution order.
+- `block <slice-id> "<reason>"`: mark a slice as blocked with recommendation.
+- `deprecate <slice-id> "<reason>"`: remove slice from active plan without deleting history, then reorder if needed.
+- `restore <slice-id>`: reactivate a deprecated slice, reinsert in execution order, and reorder if needed.
+- `reorder`: update Recommended Execution Order with a rationale note.
 
 Notes:
 
 - Prefer deprecating over deleting to preserve audit history.
 - Any lifecycle-changing command must update the register.
 - OpenSpec delegation remains mandatory (`openspec-propose` / `openspec-apply-change` / `openspec-archive-change`).
+- Program selection is implicit by default. Ask for an explicit target only when multiple timeline files are plausible candidates.
 
 ## Example workflow with commands
 
 Scenario: a PRD was decomposed into `openspec/TIMELINE_public-api-hardening.md`.
 
 1. Check current state
-   - Prompt: `status public-api-hardening`
+   - Prompt: `status`
    - Outcome: identifies `T03` as top `Ready` slice and highlights one blocked legacy item.
 
 2. Move to the next slice
-   - Prompt: `next public-api-hardening`
-   - Outcome: selects `T03`, suggests running `openspec-propose` with `t03-public-api-validation`.
+   - Prompt: `next:dry`
+   - Outcome: selects `T03` and shows the exact execution plan and proposed change id.
 
-3. Create the spec for that slice
-   - Delegate: `openspec-propose` for `T03`
-   - Register update: set `T03` to `Spec Proposed`, add `openspec/changes/t03-public-api-validation/`.
+3. Execute end-to-end for that slice
+   - Prompt: `next`
+   - Outcome: runs propose/apply/verify/archive for `T03`; register updates lifecycle and progress at each step.
 
-4. Start implementation
-   - Prompt: `start public-api-hardening T03`
-   - Delegate: `openspec-apply-change`
-   - Register update: set `T03` to `Applying`, add branch/agent context.
+4. Add a new in-flight feature request
+   - Prompt: `add "Add rate-limit visibility endpoints"`
+   - Register update: generate a new slice id/title, add the slice with minimum fields, and place it in the best execution-order position (not always next), with a short rationale.
 
-5. Mark implementation completed
-   - Prompt: `update public-api-hardening T03 Applied`
-   - Register update: add validation commands and key changed files.
+5. Force-add a feature as next work
+   - Prompt: `add-next "Expose rate-limit headers in responses"`
+   - Register update: generate a new slice id/title and place it as next executable slice when valid; otherwise place at earliest valid slot and mark it as forced in pipeline.
 
-6. Archive completed change
-   - Delegate: `openspec-archive-change`
-   - Register update: set `T03` to `Archived`, add archive path and date.
+6. Update a non-executed slice scope
+   - Prompt: `update F05 "Also include per-tenant limits and audit logging"`
+   - Register update: update goal/files/notes for `F05`, then re-check dependencies and reorder execution when needed.
 
-7. Add a new in-flight feature request
-   - Prompt: `add public-api-hardening F05 "Add rate-limit visibility endpoints"`
-   - Register update: add `F05` slice and place it in the best execution-order position (not always next), with a short scope-change note and rationale.
+7. Deprecate outdated work safely
+   - Prompt: `deprecate R02 "Replaced by F05 scope"`
+   - Register update: keep `R02` in file, add deprecation note/date, remove from active execution order, and reorder remaining queue if needed.
 
-8. Force-add a feature as next work
-   - Prompt: `add-next public-api-hardening F06 "Expose rate-limit headers in responses"`
-   - Register update: place `F06` as next executable slice, unless dependencies require an earlier prerequisite first.
-
-9. Deprecate outdated work safely
-   - Prompt: `deprecate public-api-hardening R02 "Replaced by F05 scope"`
-   - Register update: keep `R02` in file, add deprecation note/date, remove from active execution order.
-
-10. Continue flow
-   - Prompt: `status public-api-hardening`
+8. Continue flow
+   - Prompt: `status`
    - Outcome: updated queue, active blockers, and next recommended slice.
+
+## Command guide (updated)
+
+Use this as a quick operational reference.
+
+| Command | Use when | Input style | What it does |
+|---------|----------|-------------|--------------|
+| `status` | You need current program visibility | no args | Resolves active timeline and reports counts by status, blockers, and next recommended slices. |
+| `next:dry` | You want a preview before execution | no args | Selects the best `Ready` slice and returns the exact propose/apply/verify/archive plan without executing steps. |
+| `next` | You want progress now | no args | Executes end-to-end flow on the selected next slice: propose -> apply -> verify/test -> archive, updating the register at each step. |
+| `add "<feature description>"` | New feature work appears mid-program | free-form feature intent | Generates slice id and title, creates the slice with minimum fields, evaluates dependencies, and inserts it in the best execution position. |
+| `add-next "<feature description>"` | New feature is urgent and should run next | free-form feature intent | Same as `add`, but tries to place the new slice as next executable item. If blocked by dependencies, places at earliest valid slot and marks it as forced in pipeline. |
+| `start <slice-id>` | You need to move a specific slice into active execution | existing slice id | Advances the selected slice to the next actionable lifecycle state and points to required OpenSpec delegation steps. |
+| `update <slice-id> "<feature delta>"` | Planned scope changed before execution | slice id + scope delta | Allowed only on non-executed slices. Updates scope fields, re-checks dependencies, and reorders queue if needed. |
+| `block <slice-id> "<reason>"` | Progress cannot continue | slice id + blocker reason | Sets `Blocked`, captures reason, and records a suggested unblock path. |
+| `deprecate <slice-id> "<reason>"` | A slice is no longer needed | slice id + reason | Keeps slice history, marks deprecation, removes it from active queue, and runs reorder logic when needed. |
+| `restore <slice-id>` | A deprecated slice becomes relevant again | deprecated slice id | Re-activates the slice, reinserts it in execution order, and reorders queue when needed. |
+| `reorder` | Priority/dependencies changed globally | optional rationale | Recomputes `Recommended Execution Order` and records concise rationale for queue changes. |
+
+Behavior rules:
+
+- Program selection is implicit; ask only when multiple timeline candidates exist.
+- `next` is execution mode; `next:dry` is preview mode.
+- `update` is for scope evolution, not lifecycle-only status edits.
+- `deprecate` and `restore` include reorder checks automatically.
 
 ## Paths you should know
 

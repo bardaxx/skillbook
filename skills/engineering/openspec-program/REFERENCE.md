@@ -156,6 +156,35 @@ When archiving:
 
 ---
 
+## Scope changes in timeline
+
+Use these patterns when program scope changes after bootstrap.
+
+### Add a new in-flight feature
+
+- Add a new `### <ID> - <Title>` block with all minimum fields.
+- Default status is `Ready` unless implementation is already underway and an OpenSpec change already exists.
+- Insert the item in `## Recommended Execution Order` with a short note when added due to scope change.
+
+### Deprecate instead of delete
+
+When a slice is no longer planned, keep it for audit history:
+
+- Keep the slice block in place (do not remove historical context).
+- Add a clear marker in `Notes`, for example: `Deprecated on YYYY-MM-DD: <reason>`.
+- Add a progress entry, for example: `- Deprecated: YYYY-MM-DD (<reason>)`.
+- Remove the item from active `Recommended Execution Order` and note any replacement slice.
+
+### Restore a deprecated slice
+
+- Remove or supersede the deprecation note with a restore note.
+- Set status back to an actionable value (usually `Ready`).
+- Reinsert into `Recommended Execution Order`.
+
+Hard deletion of a slice is allowed only when explicitly requested by the user.
+
+---
+
 ## Progress log patterns
 
 **After propose:**

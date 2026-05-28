@@ -102,6 +102,36 @@ Create `openspec/programs/<slug>.md` from a PRD or epic:
 - **Pick next:** highest priority among `Ready`, respecting execution order unless user overrides.
 - **Reorder:** update Recommended Execution Order + short note why.
 
+## Quick commands
+
+Support lightweight command-style prompts that map to deterministic actions on an existing program register.
+
+| Command | Intent | Required input | Expected action |
+|---------|--------|----------------|-----------------|
+| `status` | Show timeline/program state | Program path or slug | Summarize slice counts by status, current blockers, and recommended next 1-2 slices. |
+| `next` | Advance to next unit of work | Program path or slug | Pick highest-priority `Ready` slice (respect execution order unless user override), then propose the exact next command (usually `openspec-propose`). |
+| `add <slice-id> "<title>"` | Add in-flight feature slice | Program + minimal slice details | Append a new slice block with minimum required fields, set initial status (usually `Ready`), and place it in execution order. |
+| `start <slice-id>` | Start a specific slice | Program + slice id | Validate slice exists and is actionable, then move lifecycle forward (or report blocker) and point to delegate skill. |
+| `update <slice-id> <status>` | Manual lifecycle update | Program + slice id + target status | Apply valid lifecycle transition, update progress log, and record linked artifact paths. |
+| `block <slice-id>` | Mark work as blocked | Program + slice id + blocking reason | Set `Blocked`, capture open question, and suggest an unblock path. |
+| `deprecate <slice-id>` | Remove from active timeline safely | Program + slice id + reason | Mark slice as deprecated in-place (without deleting history), remove it from active execution order, and log replacement/follow-up if any. |
+| `restore <slice-id>` | Re-activate deprecated slice | Program + slice id | Clear deprecation marker, choose lifecycle status (usually `Ready`), and reinsert in execution order. |
+| `reorder` | Re-prioritize queue | Program + ordering rationale | Update Recommended Execution Order and add a short reason note. |
+
+Command handling rules:
+
+1. If no program is provided, resolve active program from context; if ambiguous, ask for the target file once.
+2. Keep command responses concise and operational: current state, decision, and exact next action.
+3. Never skip OpenSpec delegation steps: `openspec-propose` / `openspec-apply-change` / `openspec-archive-change`.
+4. Always update the register after any command that changes lifecycle state.
+
+Deprecation policy:
+
+- Prefer **deprecate over delete** for slices that are no longer planned, to preserve auditability.
+- Keep deprecated slices in the file with a clear marker in `Notes` and `Progress log` (include date and reason).
+- Exclude deprecated slices from `Recommended Execution Order`; add a short note if they were replaced.
+- Hard delete a slice only when the user explicitly asks for permanent removal.
+
 ## Per-slice minimum fields
 
 Status, Priority, Goal, Why it matters, Candidate OpenSpec change id, Target behavior to specify, Likely test type (or Likely verification for non-test), Files to inspect, Notes/Open question, Progress log.

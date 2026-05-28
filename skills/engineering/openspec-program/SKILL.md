@@ -135,8 +135,9 @@ Support lightweight command-style prompts that map to deterministic actions on a
 | Command | Intent | Required input | Expected action |
 |---------|--------|----------------|-----------------|
 | `status` | Show timeline/program state | none by default | Resolve active program and summarize slice counts by status, current blockers, and recommended next 1-2 slices. |
-| `next:dry` | Plan next unit of work | none by default | Pick highest-priority `Ready` slice (respect execution order unless user override), then return exact next actions without running delegation steps. |
-| `next` | Execute the next unit end-to-end | none by default | Resolve next actionable slice and run full flow: `openspec-propose` -> `openspec-apply-change` -> verify/test -> `openspec-archive-change`, updating register lifecycle/progress after each step. |
+| `next:dry` | Preview the next OpenSpec gate | none by default | Resolve the active slice and return exactly one next gate action (`propose` or `apply` or `archive`) without executing it. |
+| `next` | Execute one OpenSpec gate | none by default | Resolve the active slice and execute exactly one lifecycle gate: `Ready` -> run `openspec-propose`; `Spec Proposed` -> run `openspec-apply-change`; `Applied` -> run `openspec-archive-change`. Update register and stop. |
+| `next:autopilot` | Execute full OpenSpec flow | none by default | Resolve the active slice and run full flow (`openspec-propose` -> `openspec-apply-change` -> verify/test -> `openspec-archive-change`) with register updates after each gate. Stop on blocker, failed verification/tests, or missing required approval. |
 | `add "<feature description>"` | Add in-flight feature slice | feature intent only | Generate a compliant slice id and concise title, create a new slice block with minimum fields, and place it at the best point in execution order (not necessarily next), with a short rationale. |
 | `add-next "<feature description>"` | Force immediate insertion | feature intent only | Generate a compliant slice id/title, create a new slice block, and place it as the next executable slice when valid; if dependencies block immediate insertion, place it at the earliest valid slot and mark it as forced in pipeline. |
 | `start <slice-id>` | Start a specific slice | slice id | Validate slice exists and is actionable, then move lifecycle forward (or report blocker) and point to delegate skill. |
@@ -162,7 +163,9 @@ Command handling rules:
 9. For `add-next`, insert as the nearest valid next position. If hard dependencies prevent immediate placement, do not force an invalid order; place it at the earliest valid slot, explain why, and add a short note that it was forced in pipeline.
 10. For `update`, reject lifecycle-only edits; use it only for feature-scope updates on non-executed slices. If a slice is already `Applying`, `Applied`, or `Archived`, do not mutate scope and return a follow-up recommendation (for example create a new slice via `add`).
 11. For `deprecate` and `restore`, run reorder logic whenever queue consistency or priority is impacted.
-12. For `next`, stop immediately on blocker, failed verification/tests, or missing required approval; record progress up to the reached step and return the stop reason with the exact next manual action.
+12. For `next`, execute one gate only and stop. Never chain propose + apply + archive in a single `next` call.
+13. For `next`, stop immediately on blocker, failed verification/tests, or missing required approval; record progress up to the reached step and return the stop reason with the exact next manual action.
+14. `next:autopilot` is the explicit opt-in mode for chaining gates end-to-end in one call. Keep `next` as single-gate by default.
 
 Deprecation policy:
 

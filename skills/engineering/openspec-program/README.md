@@ -52,8 +52,9 @@ The skill supports concise command-style prompts that map to deterministic regis
 Common commands:
 
 - `status`: summarize counts by status, blockers, and top recommended next slices for the active program.
-- `next:dry`: pick the highest-priority `Ready` slice and return the exact next actions without executing delegation steps.
-- `next`: run the full flow on the selected next slice (`openspec-propose` -> `openspec-apply-change` -> verify/test -> `openspec-archive-change`) with register updates at each lifecycle step.
+- `next:dry`: resolve the active slice and show exactly one next gate action (`propose` or `apply` or `archive`) without executing it.
+- `next`: execute exactly one OpenSpec gate according to lifecycle state, then stop and update the register.
+- `next:autopilot`: run the full flow on the selected slice (`openspec-propose` -> `openspec-apply-change` -> verify/test -> `openspec-archive-change`) with register updates at each lifecycle step.
 - `add "<feature description>"`: add a new slice from intent. The skill generates slice id/title, fills minimum fields, and inserts it at the best position in execution order with rationale.
 - `add-next "<feature description>"`: same as `add`, but force placement as the next executable work item when valid. If dependencies prevent immediate placement, place it at the earliest valid slot and record that it was forced.
 - `start <slice-id>`: move a selected slice into the next actionable lifecycle step.
@@ -78,31 +79,35 @@ Scenario: a PRD was decomposed into `openspec/TIMELINE_public-api-hardening.md`.
    - Prompt: `status`
    - Outcome: identifies `T03` as top `Ready` slice and highlights one blocked legacy item.
 
-2. Move to the next slice
+2. Preview the next gate
    - Prompt: `next:dry`
-   - Outcome: selects `T03` and shows the exact execution plan and proposed change id.
+   - Outcome: selects `T03` and shows the single next gate (for example: run `openspec-propose`).
 
-3. Execute end-to-end for that slice
+3. Execute one gate
    - Prompt: `next`
-   - Outcome: runs propose/apply/verify/archive for `T03`; register updates lifecycle and progress at each step.
+   - Outcome: runs only one gate (for example `openspec-propose`), updates lifecycle/progress, then stops for human review.
 
-4. Add a new in-flight feature request
+4. Execute end-to-end (optional)
+   - Prompt: `next:autopilot`
+   - Outcome: runs propose/apply/verify/archive in sequence for the selected slice; updates lifecycle and progress at each step; stops early on blockers or failed checks.
+
+5. Add a new in-flight feature request
    - Prompt: `add "Add rate-limit visibility endpoints"`
    - Register update: generate a new slice id/title, add the slice with minimum fields, and place it in the best execution-order position (not always next), with a short rationale.
 
-5. Force-add a feature as next work
+6. Force-add a feature as next work
    - Prompt: `add-next "Expose rate-limit headers in responses"`
    - Register update: generate a new slice id/title and place it as next executable slice when valid; otherwise place at earliest valid slot and mark it as forced in pipeline.
 
-6. Update a non-executed slice scope
+7. Update a non-executed slice scope
    - Prompt: `update F05 "Also include per-tenant limits and audit logging"`
    - Register update: update goal/files/notes for `F05`, then re-check dependencies and reorder execution when needed.
 
-7. Deprecate outdated work safely
+8. Deprecate outdated work safely
    - Prompt: `deprecate R02 "Replaced by F05 scope"`
    - Register update: keep `R02` in file, add deprecation note/date, remove from active execution order, and reorder remaining queue if needed.
 
-8. Continue flow
+9. Continue flow
    - Prompt: `status`
    - Outcome: updated queue, active blockers, and next recommended slice.
 
@@ -113,8 +118,9 @@ Use this as a quick operational reference.
 | Command | Use when | Input style | What it does |
 |---------|----------|-------------|--------------|
 | `status` | You need current program visibility | no args | Resolves active timeline and reports counts by status, blockers, and next recommended slices. |
-| `next:dry` | You want a preview before execution | no args | Selects the best `Ready` slice and returns the exact propose/apply/verify/archive plan without executing steps. |
-| `next` | You want progress now | no args | Executes end-to-end flow on the selected next slice: propose -> apply -> verify/test -> archive, updating the register at each step. |
+| `next:dry` | You want a preview before execution | no args | Resolves the active slice and returns one next gate action (`propose` or `apply` or `archive`) without executing it. |
+| `next` | You want controlled progress with review points | no args | Executes exactly one gate based on current state, updates register, and stops. Use repeated `next` calls to walk propose -> apply -> archive with human checkpoints. |
+| `next:autopilot` | You want end-to-end execution in one command | no args | Runs the full propose -> apply -> verify/test -> archive sequence, updates register at each step, and stops early on blockers or failed checks. |
 | `add "<feature description>"` | New feature work appears mid-program | free-form feature intent | Generates slice id and title, creates the slice with minimum fields, evaluates dependencies, and inserts it in the best execution position. |
 | `add-next "<feature description>"` | New feature is urgent and should run next | free-form feature intent | Same as `add`, but tries to place the new slice as next executable item. If blocked by dependencies, places at earliest valid slot and marks it as forced in pipeline. |
 | `start <slice-id>` | You need to move a specific slice into active execution | existing slice id | Advances the selected slice to the next actionable lifecycle state and points to required OpenSpec delegation steps. |
@@ -127,7 +133,8 @@ Use this as a quick operational reference.
 Behavior rules:
 
 - Program selection is implicit; ask only when multiple timeline candidates exist.
-- `next` is execution mode; `next:dry` is preview mode.
+- `next` executes one gate per call; `next:dry` previews one gate.
+- `next:autopilot` is explicit opt-in for end-to-end execution.
 - `update` is for scope evolution, not lifecycle-only status edits.
 - `deprecate` and `restore` include reorder checks automatically.
 

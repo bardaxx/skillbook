@@ -24,6 +24,14 @@ PRD / epic  →  program register (slices)  →  one OpenSpec change per slice
 
 ## Use in your repository
 
+### Install from registry
+
+```bash
+npx skills@latest add bardaxx/skillbook
+```
+
+### Manual setup
+
 1. Copy or install the skill folder into your agent skills path (e.g. `.agents/skills/<name>/`).
 2. Document it in your repository **agent instructions** (`AGENTS.md` or mirrors) — especially for [openspec-program](skills/engineering/openspec-program/SKILL.md), which expects a program layer in the consumer repo.
 3. Invoke by skill name when the task matches the skill description.

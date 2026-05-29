@@ -1,6 +1,6 @@
-# OpenSpec Timeline Register — Reference
+# OpenSpec Roadmap Register — Reference
 
-Use this file when bootstrapping `openspec/TIMELINE_<context>.md` or adding slices.
+Use this file when bootstrapping `openspec/roadmap.md` or adding slices.
 All guidance in this reference must stay token-saving and operationally concise.
 
 ---
@@ -11,17 +11,15 @@ Use this baseline for token and loading limits.
 Treat this config as operational guidance only: do not regenerate, rewrite, or recreate OpenSpec specs from `openspec/config.yaml`.
 
 ```yaml
-openspec_program:
+openspec_roadmap:
   mode: default
-  timeline:
-    filename_pattern: "TIMELINE_<context>.md"
-    path: "openspec/"
+  register: openspec/roadmap.md
   token_budget:
     max_input_tokens: 18000
     reserved_output_tokens: 4000
   context_loading:
     include_only:
-      - active_timeline_register
+      - roadmap_register
       - selected_slice
       - linked_openspec_change
       - directly_referenced_files
@@ -40,23 +38,45 @@ openspec_program:
 
 ## Temporary assets policy
 
-When program execution requires temporary artifacts (for example `audit.md`, draft notes, interim checklists, or scratch outputs), store them under:
+When roadmap work requires temporary artifacts (for example `audit.md`, draft notes, interim checklists, or scratch outputs), store them under:
 
 - `openspec/.temp_assets/`
 
 Rules:
 
-- Do not place temporary program assets in `openspec/changes/` or alongside timeline files.
+- Do not place temporary roadmap assets in `openspec/changes/` or alongside `openspec/roadmap.md`.
 - Ensure `.gitignore` contains `openspec/.temp_assets/` during bootstrap/initialization.
 - Treat this folder as ephemeral working state for definition/apply support files.
 
 ---
 
-## Timeline template (default)
+## Roadmap template (default)
 
-The default template is maintained only in [TIMELINE_SKELETON.md](TIMELINE_SKELETON.md).
+The default template is maintained only in [ROADMAP_SKELETON.md](ROADMAP_SKELETON.md).
 Do not duplicate or rewrite that template in this reference.
 When needed, link to it and keep this document focused on rules, constraints, and checklists.
+
+---
+
+## Legacy migration (one-time)
+
+When bootstrapping or refactoring a consumer repo, migrate obsolete planning files into the single roadmap. Do not read legacy paths after migration.
+
+| Legacy path | Action |
+|-------------|--------|
+| `openspec/TIMELINE_<context>.md` | Merge into `openspec/roadmap.md`, then delete the legacy file |
+| `openspec/programs/<slug>.md` | Merge into `openspec/roadmap.md`, then delete the legacy file |
+| Multiple legacy files | Merge all slice sections into one roadmap; renumber or prefix slice ids on collision (for example two `F01` blocks); manual review required |
+| `AGENTS.md` and mirrors | Replace references to `openspec-program`, `TIMELINE_*`, or “program layer” with `openspec-roadmap` and `openspec/roadmap.md` |
+
+Suggested merge order:
+
+1. PRD links at top — if several PRDs, use a bullet list.
+2. Union all **Slices** sections.
+3. Rebuild one **Recommended Execution Order**.
+4. Merge **Compacted history** entries.
+
+No fallback reads of `TIMELINE_*` or `openspec/programs/` after migration.
 
 ---
 
@@ -92,7 +112,7 @@ Use sequential numbering within each prefix (`F01`, `R02`, ...).
 - Required format: `<slice-id-lower>-<slice-title-kebab>`.
 - Example: `T10 - audit legacy test harness` -> `t10-audit-legacy-test-harness`.
 - Keep `Spec link` synchronized with the same id under `openspec/changes/`.
-- For non-applied slices only (`Ready`, `Spec Proposed`), if title/order updates imply a new id and a change folder already exists, rename that folder and update references in the timeline.
+- For non-applied slices only (`Ready`, `Spec Proposed`), if title/order updates imply a new id and a change folder already exists, rename that folder and update references in the roadmap.
 
 ---
 
@@ -109,7 +129,7 @@ A slice cannot be marked `Applied` unless:
 
 ## Parallelism and WIP limits
 
-OpenSpec programs can run multiple slices in parallel, with controlled implementation concurrency.
+OpenSpec roadmaps can run multiple slices in parallel, with controlled implementation concurrency.
 
 - Multiple slices may stay in `Spec Proposed`.
 - Keep a maximum of **2** slices in `Applying` globally.
@@ -139,7 +159,7 @@ Verification failures are blocking: resolve issues, re-run verification, then co
 
 ## Do-not-use gate
 
-Do not use the timeline flow for:
+Do not use the roadmap flow for:
 
 - bugfixes under 30 minutes
 - isolated copy/UI changes
@@ -148,11 +168,11 @@ Do not use the timeline flow for:
 
 ---
 
-## Scope changes in timeline
+## Scope changes in roadmap
 
 ### Add a new in-flight feature
 
-- Add a new `### <ID> - <Title>` block with default timeline fields.
+- Add a new `### <ID> - <Title>` block with default roadmap fields.
 - Default status is `Ready` unless implementation already started.
 - Insert item in `## Recommended Execution Order` at the best position, not automatically at the end.
 - Choose insertion position using:
@@ -216,8 +236,9 @@ Use `pending` for steps not yet reached.
 ## Bootstrap checklist
 
 ```
-- [ ] `openspec/config.yaml` contains mode/token/loading limits
-- [ ] timeline file is named `openspec/TIMELINE_<context>.md`
+- [ ] Legacy TIMELINE_* / openspec/programs/ files migrated or absent
+- [ ] `openspec/config.yaml` contains openspec_roadmap mode/token/loading limits
+- [ ] `openspec/roadmap.md` exists
 - [ ] `.gitignore` contains `openspec/.temp_assets/`
 - [ ] PRD/issue link at top
 - [ ] How-to + status model sections
@@ -237,49 +258,39 @@ Use `pending` for steps not yet reached.
 
 Insert or merge into the repo’s primary agent instruction file (usually `AGENTS.md`), under or beside existing OpenSpec rules. Mirror the same block in any secondary entrypoints that load agent rules for that repository. Replace `<skill-path>` with the installed path.
 
-### Section: OpenSpec Program (merge into OpenSpec workflow)
+### Section: OpenSpec Roadmap (merge into OpenSpec workflow)
 
 ```markdown
-## OpenSpec Program (PRD → multiple changes)
+## OpenSpec Roadmap (PRD → multiple changes)
 
 Use this layer when a PRD or epic would otherwise become one oversized OpenSpec change.
 
 | Step | What | Where |
 |------|------|--------|
 | 1 | PRD or issue | Issue tracker / `PRD.md` file |
-| 2 | Decompose into prioritized slices | `openspec/TIMELINE_<context>.md` |
+| 2 | Decompose into prioritized slices | `openspec/roadmap.md` |
 | 3 | Per slice with status `Ready` | `openspec-propose` → `openspec/changes/<change-id>/` |
 | 4 | Implement | `openspec-apply-change` (slice → `Applying` → `Applied`) |
 | 5 | Complete | `openspec-archive-change` (slice → `Archived`) |
 
 **Rules**
 
-- Program registers are planning files only — do not copy `proposal.md` / `design.md` / `tasks.md` into them.
+- `openspec/roadmap.md` is the planning file only — do not copy `proposal.md` / `design.md` / `tasks.md` into it.
 - Implementable slices are **1:1** with OpenSpec changes (`Candidate OpenSpec change id`).
 - Slice lifecycle: `Ready` → `Spec Proposed` → `Applying` → `Applied` → `Archived` (`Blocked` when decisions are pending).
-- Keep `next` atomic (one gate per command) and enforce `Applying` WIP limits from the active timeline policy.
+- Keep `next` atomic (one gate per command) and enforce `Applying` WIP limits from the roadmap policy.
 - Run OpenSpec spec verification after each lifecycle gate and fix issues before the next gate.
-- Pick the next slice by priority and recommended execution order in the register.
-- Update the register after every propose, apply, and archive step.
-- Keep timeline entries concise and operational.
-- Enforce context/token limits via `openspec/config.yaml`.
+- Pick the next slice by priority and recommended execution order in the roadmap.
+- Update the roadmap after every propose, apply, and archive step.
+- Keep roadmap entries concise and operational.
+- Enforce context/token limits via `openspec/config.yaml` (`openspec_roadmap`).
 
 **Skill**
 
 | Task | Skill file |
 |------|------------|
-| Bootstrap program, add slices, update lifecycle | `<skill-path>/SKILL.md` |
-| Register template and checklists | `<skill-path>/REFERENCE.md` |
-```
-
-### Optional: active programs pointer
-
-Add when bootstrapping or when the repo tracks multiple programs:
-
-```markdown
-### Active OpenSpec programs
-
-- `<context>` — `openspec/TIMELINE_<context>.md` (PRD: <link>)
+| Bootstrap roadmap, add slices, update lifecycle | `<skill-path>/SKILL.md` |
+| Roadmap template and checklists | `<skill-path>/REFERENCE.md` |
 ```
 
 ### Routing table variant (GitNexus-style repos)
@@ -288,16 +299,16 @@ If `AGENTS.md` already uses a task → skill file table, append:
 
 ```markdown
 | Decompose PRD/epic into OpenSpec slices | `<skill-path>/SKILL.md` |
-| Pick next program slice / update slice status | `<skill-path>/SKILL.md` |
+| Pick next roadmap slice / update slice status | `<skill-path>/SKILL.md` |
 ```
 
 ### Agent docs checklist
 
 ```
-- [ ] Primary agent instruction file contains OpenSpec Program subsection
+- [ ] Primary agent instruction file contains OpenSpec Roadmap subsection
 - [ ] Secondary entrypoints mirrored where the repo uses them
-- [ ] Skill path in table matches install location
-- [ ] Active program link added when bootstrapping <slug>
+- [ ] Skill path in table matches install location (`openspec-roadmap`)
+- [ ] Roadmap path documented as `openspec/roadmap.md`
 - [ ] No duplicate conflicting OpenSpec instructions
 ```
 

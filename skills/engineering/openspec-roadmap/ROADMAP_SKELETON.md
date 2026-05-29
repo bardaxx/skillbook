@@ -1,11 +1,11 @@
-# TIMELINE_<context>
+# Roadmap
 
 PRD: <issue URL, path, or "see conversation YYYY-MM-DD">
 
-This timeline is a short execution map used to generate OpenSpec changes per slice.
+This roadmap is a short execution map used to generate OpenSpec changes per slice.
 Keep entries concise. Do not duplicate proposal/design/tasks content.
 
-## How To Use This Timeline
+## How To Use This Roadmap
 
 1. Pick the highest-priority `Ready` slice.
 2. Create/update one OpenSpec change for that slice.

@@ -4,4 +4,4 @@ Daily code-work skills. Shipped skills are listed in the [repository README](../
 
 | Skill | Description |
 |-------|-------------|
-| [openspec-program](openspec-program/SKILL.md) | Bridge PRDs and large epics to multiple OpenSpec changes via timeline registers under `openspec/TIMELINE_<context>.md`. |
+| [openspec-roadmap](openspec-roadmap/SKILL.md) | Bridge PRDs and large epics to multiple OpenSpec changes via `openspec/roadmap.md`. |

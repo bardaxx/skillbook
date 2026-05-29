@@ -150,7 +150,10 @@ If verification fails, stop progression, resolve issues, re-run verification, th
 Create or update `openspec/roadmap.md` from a PRD or epic:
 
 1. Read PRD/issue, `CONTEXT.md` (domain terms), and `AGENTS.md` (OpenSpec + GitNexus gates).
-2. If `openspec/TIMELINE_*.md` or `openspec/programs/*.md` exists, run [legacy migration](REFERENCE.md#legacy-migration-one-time), then continue.
+2. **Legacy migration (mandatory when present):** if `openspec/TIMELINE_*.md` or `openspec/programs/*.md` exists, run [legacy migration](REFERENCE.md#legacy-migration-one-time) **before** writing the roadmap.
+   - **Merge** slice content into the single canonical file **`openspec/roadmap.md`** (fixed path; no `<context>` suffix).
+   - **Delete** every legacy file after a successful merge. Do **not** `git mv` / rename `TIMELINE_*` → `roadmap.md` and do **not** keep legacy paths as fallbacks.
+   - If `openspec/roadmap.md` already exists, merge legacy slices into it (resolve id collisions); do not create a second planning file.
 3. Create or update `openspec/config.yaml` with `openspec_roadmap` defaults and token/context limits.
 4. Ensure `.gitignore` contains `openspec/.temp_assets/` (create/update it if needed).
 5. Decompose into short, actionable slices.

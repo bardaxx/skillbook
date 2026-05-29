@@ -25,7 +25,7 @@ This skill adds **`openspec/roadmap.md`**: one markdown file listing slices and 
 | Change approved / implementing | Run `openspec-apply-change`; set slice `Applying` |
 | Change complete | Run `openspec-archive-change`; set slice `Archived` |
 | No formal PRD yet | Create a `PRD.md` file (or equivalent), then bootstrap |
-| Legacy `TIMELINE_*` or `openspec/programs/` files exist | Merge into `openspec/roadmap.md` per [REFERENCE.md](REFERENCE.md#legacy-migration-one-time), then delete legacy files |
+| Legacy `TIMELINE_*` or `openspec/programs/` files exist | **Merge + delete** into fixed path `openspec/roadmap.md` — do **not** rename `TIMELINE_*` in place; see [REFERENCE.md](REFERENCE.md#legacy-migration-one-time) |
 
 The roadmap is a **map and status board**, not a copy of `proposal.md` or `tasks.md`. Link paths; do not duplicate OpenSpec artifacts.
 
@@ -120,7 +120,7 @@ When this skill is adopted in a repo, document the roadmap layer in **repository
 
 On bootstrap:
 
-1. Migrate legacy planning files if present (see REFERENCE).
+1. If legacy `TIMELINE_*` or `openspec/programs/` exist: **merge** into `openspec/roadmap.md`, **delete** legacy files (never rename-only); see REFERENCE.
 2. Create or update `openspec/roadmap.md`.
 3. Add or merge an **OpenSpec Roadmap** section in agent instruction files ([REFERENCE.md](REFERENCE.md#agent-docs-snippet)).
 4. Point to the installed `openspec-roadmap` skill path in any task → skill routing table.

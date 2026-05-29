@@ -81,7 +81,7 @@ Skills in this catalog may **reference** workflows from other MIT-licensed colle
 
 | Term | Resolution |
 |------|------------|
-| `TIMELINE_*` / `openspec/programs/` | Obsolete planning paths. Migrate to **`openspec/roadmap.md`**; see `openspec-roadmap` skill REFERENCE. |
+| `TIMELINE_*` / `openspec/programs/` | Obsolete planning paths. **Merge** into **`openspec/roadmap.md`**, then **delete** legacy files (do not rename in place); see `openspec-roadmap` REFERENCE legacy migration. |
 | “change” | In consumer repos, prefer **OpenSpec change**. In this repo, prefer **skill** for catalog items. |
 | “PRD” | Product/requirements document in the consumer’s **issue tracker** or docs—not a file type owned by Skillbook. |
 | “plugin” | May mean `.claude-plugin/plugin.json` (catalog) or a host’s plugin system; specify which. |

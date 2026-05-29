@@ -60,13 +60,34 @@ When needed, link to it and keep this document focused on rules, constraints, an
 
 ## Legacy migration (one-time)
 
-When bootstrapping or refactoring a consumer repo, migrate obsolete planning files into the single roadmap. Do not read legacy paths after migration.
+When bootstrapping or refactoring a consumer repo, migrate obsolete planning files into the **single canonical roadmap** at **`openspec/roadmap.md`**. This path is fixed: there is no `roadmap_<context>.md` and legacy filenames must not survive under another name.
+
+### Do not rename in place
+
+| Wrong | Right |
+|-------|-------|
+| `git mv openspec/TIMELINE_foo.md openspec/roadmap.md` when content is still the old timeline layout | Merge slice sections into `openspec/roadmap.md` using the current roadmap skeleton, then delete `TIMELINE_foo.md` |
+| Keep `TIMELINE_*` “for reference” or read it when `roadmap.md` is missing | One source of truth: `openspec/roadmap.md` only; delete legacy files after merge |
+| Multiple planning files (`roadmap.md` + `TIMELINE_bar.md`) | One `openspec/roadmap.md`; merge all legacy sources into it |
+
+Renaming without merge leaves obsolete section structure, wrong agent-doc references, and split planning state. **Merge + delete** is mandatory.
+
+### Migration procedure
+
+1. **Discover** — list `openspec/TIMELINE_*.md`, `openspec/programs/*.md`, and whether `openspec/roadmap.md` already exists.
+2. **Target** — create or open `openspec/roadmap.md` (canonical path only).
+3. **Merge** — copy slice blocks, statuses, candidate change ids, spec links, and progress from each legacy file into the roadmap; normalize to the lite slice format in [ROADMAP_SKELETON.md](ROADMAP_SKELETON.md).
+4. **Reconcile** — one PRD link block, one **Recommended Execution Order**, one **Compacted history** (see merge order below). On id collision across files (e.g. two `F01`), renumber or prefix and fix linked `openspec/changes/` references if needed.
+5. **Delete legacy** — remove every `TIMELINE_*` and `openspec/programs/*.md` file from the repo after merge verifies in `roadmap.md`.
+6. **Update agent docs** — replace `openspec-program`, `TIMELINE_*`, “program layer”, and legacy paths in `AGENTS.md` (and mirrors) with `openspec-roadmap` and `openspec/roadmap.md`.
+7. **Verify** — confirm no `TIMELINE_*` or `openspec/programs/` paths remain; agents must not read them again.
 
 | Legacy path | Action |
 |-------------|--------|
-| `openspec/TIMELINE_<context>.md` | Merge into `openspec/roadmap.md`, then delete the legacy file |
-| `openspec/programs/<slug>.md` | Merge into `openspec/roadmap.md`, then delete the legacy file |
-| Multiple legacy files | Merge all slice sections into one roadmap; renumber or prefix slice ids on collision (for example two `F01` blocks); manual review required |
+| `openspec/TIMELINE_<context>.md` | Merge into `openspec/roadmap.md`, then **delete** (not rename) the legacy file |
+| `openspec/programs/<slug>.md` | Merge into `openspec/roadmap.md`, then **delete** (not rename) the legacy file |
+| Multiple legacy files | Merge all into one `openspec/roadmap.md`; resolve slice id collisions; manual review required |
+| `openspec/roadmap.md` already present | Merge legacy into existing roadmap; do not add parallel planning files |
 | `AGENTS.md` and mirrors | Replace references to `openspec-program`, `TIMELINE_*`, or “program layer” with `openspec-roadmap` and `openspec/roadmap.md` |
 
 Suggested merge order:
@@ -76,7 +97,7 @@ Suggested merge order:
 3. Rebuild one **Recommended Execution Order**.
 4. Merge **Compacted history** entries.
 
-No fallback reads of `TIMELINE_*` or `openspec/programs/` after migration.
+**After migration:** no fallback reads of `TIMELINE_*` or `openspec/programs/`. If bootstrap finds legacy files, migration runs first; do not skip by creating a fresh empty `roadmap.md` beside them.
 
 ---
 
@@ -247,7 +268,7 @@ Use `pending` for steps not yet reached.
 ## Bootstrap checklist
 
 ```
-- [ ] Legacy TIMELINE_* / openspec/programs/ files migrated or absent
+- [ ] Legacy TIMELINE_* / openspec/programs/ merged into `openspec/roadmap.md` and deleted (not renamed in place)
 - [ ] `openspec/config.yaml` contains openspec_roadmap mode/token/loading limits
 - [ ] `openspec/roadmap.md` exists
 - [ ] `.gitignore` contains `openspec/.temp_assets/`

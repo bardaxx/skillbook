@@ -4,9 +4,12 @@ Workflow vocabulary for **`openspec-program`** in a **consumer repo**. Product l
 
 ## Language
 
-**Program register (timeline register)**  
-A markdown planning file at `openspec/TIMELINE_<context>.md` listing slices, priorities, and lifecycle status. It is not an OpenSpec change.  
-_Avoid_: timeline (as product name), backlog file, `openspec/programs/` (legacy path)
+**Roadmap register** (canonical)  
+The single planning file at **`openspec/roadmap.md`** listing slices, priorities, and lifecycle status. It is not an OpenSpec change.
+
+**Program register (timeline register)** — *legacy, migrate on bootstrap*  
+Obsolete path: `openspec/TIMELINE_<context>.md` or `openspec/programs/<slug>.md`. On bootstrap, **merge** content into `openspec/roadmap.md` and **delete** legacy files; do **not** rename `TIMELINE_*` → `roadmap.md` without merging to the current roadmap format.  
+_Avoid_: timeline (as product name), backlog file, keeping `TIMELINE_*` as a fallback after migration
 
 **Slice**  
 One decomposed unit of work inside the register, with an id (`F01`, `R02`, `T03`, …) and a candidate OpenSpec change id.  

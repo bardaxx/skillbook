@@ -21,7 +21,7 @@ This skill adds **`openspec/roadmap.md`**: one markdown file listing slices and 
 |-----------|------------|
 | PRD exists, no execution plan | **Bootstrap** → `openspec/roadmap.md` |
 | Operator asks what is next | Pick highest-priority slice with status `Ready` |
-| Slice is `Ready` | Run `openspec-propose` (1:1 slice → change id) |
+| Slice is `Ready` | Run `openspec-propose` with the slice's **exact** `Candidate OpenSpec change id` → `openspec/changes/<id>/` |
 | Change approved / implementing | Run `openspec-apply-change`; set slice `Applying` |
 | Change complete | Run `openspec-archive-change`; set slice `Archived` |
 | No formal PRD yet | Create a `PRD.md` file (or equivalent), then bootstrap |
@@ -70,6 +70,7 @@ Notes:
 - Any lifecycle-changing command must update `openspec/roadmap.md`.
 - OpenSpec delegation remains mandatory (`openspec-propose` / `openspec-apply-change` / `openspec-archive-change`).
 - `Candidate OpenSpec change id` must include the slice id as prefix: `<slice-id-lower>-<slice-title-kebab>`.
+- On propose (`next`, `start`, or manual): pass that candidate id verbatim to `openspec-propose`; do not invent a slug from goal/PRD text.
 - On `reorder`, `add`, `add-next`, `update`, `deprecate`, or `restore`, if a non-applied slice (`Ready` or `Spec Proposed`) already has a change folder and the computed id changes, rename the folder and update links in the roadmap.
 - Temporary artifacts used for planning/apply support (for example `audit.md`) must live in `openspec/.temp_assets/`.
 - During initialization/bootstrap, ensure `.gitignore` includes `openspec/.temp_assets/`.

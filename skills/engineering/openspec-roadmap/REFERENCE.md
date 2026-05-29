@@ -114,6 +114,17 @@ Use sequential numbering within each prefix (`F01`, `R02`, ...).
 - Keep `Spec link` synchronized with the same id under `openspec/changes/`.
 - For non-applied slices only (`Ready`, `Spec Proposed`), if title/order updates imply a new id and a change folder already exists, rename that folder and update references in the roadmap.
 
+### At propose (mandatory)
+
+When a slice is `Ready` and you delegate to `openspec-propose`:
+
+1. Use the slice's `Candidate OpenSpec change id` from `openspec/roadmap.md` **verbatim** as `<change-id>`.
+2. Create or target `openspec/changes/<change-id>/` — do not derive a different slug from goal, PRD, or chat text.
+3. If the candidate id is missing or wrong, fix the roadmap (recompute `<slice-id-lower>-<slice-title-kebab>`) before proposing.
+4. After propose, `Spec link` and progress log must reference the same folder path.
+
+Example: `### T09 - Location Search And Proposal Add Discovery` → `t09-location-search-and-proposal-add-discovery` → `openspec/changes/t09-location-search-and-proposal-add-discovery/`.
+
 ---
 
 ## Definition of done for `Applied`
@@ -269,7 +280,7 @@ Use this layer when a PRD or epic would otherwise become one oversized OpenSpec 
 |------|------|--------|
 | 1 | PRD or issue | Issue tracker / `PRD.md` file |
 | 2 | Decompose into prioritized slices | `openspec/roadmap.md` |
-| 3 | Per slice with status `Ready` | `openspec-propose` → `openspec/changes/<change-id>/` |
+| 3 | Per slice with status `Ready` | `openspec-propose` → `openspec/changes/<Candidate OpenSpec change id>/` (exact id from roadmap) |
 | 4 | Implement | `openspec-apply-change` (slice → `Applying` → `Applied`) |
 | 5 | Complete | `openspec-archive-change` (slice → `Archived`) |
 
@@ -277,6 +288,7 @@ Use this layer when a PRD or epic would otherwise become one oversized OpenSpec 
 
 - `openspec/roadmap.md` is the planning file only — do not copy `proposal.md` / `design.md` / `tasks.md` into it.
 - Implementable slices are **1:1** with OpenSpec changes (`Candidate OpenSpec change id`).
+- On propose, pass the slice's `Candidate OpenSpec change id` verbatim to `openspec-propose` — format `<slice-id-lower>-<slice-title-kebab>`; never invent a folder name from goal/PRD text.
 - Slice lifecycle: `Ready` → `Spec Proposed` → `Applying` → `Applied` → `Archived` (`Blocked` when decisions are pending).
 - Keep `next` atomic (one gate per command) and enforce `Applying` WIP limits from the roadmap policy.
 - Run OpenSpec spec verification after each lifecycle gate and fix issues before the next gate.

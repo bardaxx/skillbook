@@ -36,7 +36,7 @@ Keep entries concise. Do not duplicate proposal/design/tasks content.
 ### T01 - <short title>
 Status: `Ready`
 Goal: <1-2 lines>
-Candidate OpenSpec change id: `<slice-id-lower>-<slice-title-kebab>`
+Candidate OpenSpec change id: `<slice-id-lower>-<slice-title-kebab>` (propose must use this exact id)
 Spec link: `openspec/changes/<change-id>/`
 Files:
 - `path/to/file.ts`

@@ -15,7 +15,7 @@ Roadmap format and templates: [REFERENCE.md](REFERENCE.md). The consumer repo us
 |-----------|--------|
 | PRD exists, no execution plan | **Bootstrap** → `openspec/roadmap.md` |
 | Need next unit of work | Pick highest-priority slice with status `Ready` |
-| Slice is `Ready` | Delegate to `openspec-propose` (1:1 slice → change) |
+| Slice is `Ready` | Delegate to `openspec-propose` using **exact** `Candidate OpenSpec change id` (1:1 slice → change folder) |
 | Change approved / implementing | Delegate to `openspec-apply-change`; set slice `Applying` |
 | Change done | Delegate to `openspec-archive-change`; set slice `Archived` |
 | Upstream only conversation | Create a `PRD.md` file first, then bootstrap |
@@ -27,7 +27,7 @@ Roadmap format and templates: [REFERENCE.md](REFERENCE.md). The consumer repo us
     ↓
 openspec-roadmap → openspec/roadmap.md (concise slices)
     ↓ (per slice, status Ready)
-openspec-propose → openspec/changes/<change-id>/
+openspec-propose → openspec/changes/<Candidate OpenSpec change id>/
 openspec-apply-change → implementation
 openspec-archive-change → archive
     ↓
@@ -74,6 +74,20 @@ Use `openspec/config.yaml` to keep context bounded. Default to these constraints
 - Keep `Spec link` aligned with the same id: `openspec/changes/<change-id>/`.
 - If the slice title changes while the slice is still non-executed (`Ready` or `Spec Proposed`), update both the candidate id and spec link to keep them aligned.
 
+### At propose (mandatory)
+
+When delegating to `openspec-propose` for a slice in `Ready`:
+
+1. Read `Candidate OpenSpec change id` from that slice block in `openspec/roadmap.md`.
+2. Pass that exact id to `openspec-propose` so the change folder is `openspec/changes/<change-id>/`.
+3. Do **not** invent a new slug from the goal, PRD text, or conversation — the roadmap id is the source of truth.
+4. If `Candidate OpenSpec change id` is missing or does not match `<slice-id-lower>-<slice-title-kebab>`, fix the roadmap first, then propose.
+5. After propose, set `Spec link` and progress log to the same id; reject mismatched folder names.
+
+Example: `### T09 - Location Search And Proposal Add Discovery` with candidate id `t09-location-search-and-proposal-add-discovery` → propose into `openspec/changes/t09-location-search-and-proposal-add-discovery/`.
+
+Why this matters: stable 1:1 mapping between slice headings, roadmap status, change folders, and archive paths.
+
 ## Slice IDs
 
 | Prefix | Use |
@@ -102,7 +116,7 @@ Fixed lifecycle: `Ready` → `Spec Proposed` → `Applying` → `Applied` → `A
 | Transition | Roadmap update | Delegate to |
 |------------|----------------|-------------|
 | Pick slice | — | — |
-| Change created | `Spec Proposed`; add change path | `openspec-propose` |
+| Change created | `Spec Proposed`; `Spec link` = `openspec/changes/<Candidate OpenSpec change id>/` | `openspec-propose` using **exact** `Candidate OpenSpec change id` |
 | Implementation started | `Applying`; branch/notes optional | `openspec-apply-change` |
 | Code/tests verified | `Applied`; tests + validation commands | (during apply) |
 | Change archived | `Archived`; archive path + date | `openspec-archive-change` |
@@ -168,7 +182,7 @@ Support lightweight command-style prompts that map to deterministic actions on `
 |---------|--------|----------------|-----------------|
 | `status` | Show roadmap state | none by default | Summarize slice counts by status, current blockers, and recommended next 1-2 slices. |
 | `next:dry` | Preview the next OpenSpec gate | none by default | Resolve the active slice and return exactly one next gate action (`propose` or `apply` or `archive`) without executing it. |
-| `next` | Execute one OpenSpec gate | none by default | Resolve the active slice and execute exactly one lifecycle gate: `Ready` -> run `openspec-propose`; `Spec Proposed` -> run `openspec-apply-change`; `Applied` -> run `openspec-archive-change`. Run OpenSpec spec verification after the gate, fix issues if any, update roadmap, and stop. |
+| `next` | Execute one OpenSpec gate | none by default | Resolve the active slice and execute exactly one lifecycle gate: `Ready` -> run `openspec-propose` with that slice's `Candidate OpenSpec change id`; `Spec Proposed` -> run `openspec-apply-change`; `Applied` -> run `openspec-archive-change`. Run OpenSpec spec verification after the gate, fix issues if any, update roadmap, and stop. |
 | `add "<feature description>"` | Add in-flight feature slice | feature intent only | Generate a compliant slice id and concise title, create a new slice block with minimum fields, and place it at the best point in execution order (not necessarily next), with a short rationale. |
 | `add-next "<feature description>"` | Force immediate insertion | feature intent only | Generate a compliant slice id/title, create a new slice block, and place it as the next executable slice when valid; if dependencies block immediate insertion, place it at the earliest valid slot and mark it as forced in pipeline. |
 | `start <slice-id>` | Start a specific slice | slice id | Validate slice exists and is actionable, then move lifecycle forward (or report blocker) and point to delegate skill. |
@@ -183,21 +197,22 @@ Command handling rules:
 1. Always operate on `openspec/roadmap.md` unless the user gives another path explicitly.
 2. Keep command responses concise and operational: current state, decision, and exact next action.
 3. Never skip OpenSpec delegation steps: `openspec-propose` / `openspec-apply-change` / `openspec-archive-change`.
-4. Always update the roadmap after any command that changes lifecycle state.
-5. For `add` and `add-next`, do not require user-provided slice id or title. Generate both from intent using the repository prefix/sequence rules and preserve uniqueness.
-6. For `add`, do not append blindly to the end. Evaluate dependencies, risk, and leverage against existing slices, then insert the slice at the most suitable position in `Recommended Execution Order`.
-7. When `add` or `add-next` causes reordering, explicitly report inserted position, concise rationale, and whether it changes the next recommended slice.
-8. For `add-next`, insert as the nearest valid next position. If hard dependencies prevent immediate placement, place at the earliest valid slot, explain why, and add a short note that it was forced in pipeline.
-9. For `update`, reject lifecycle-only edits; use it only for feature-scope updates on non-executed slices. If a slice is already `Applying`, `Applied`, or `Archived`, do not mutate scope and return a follow-up recommendation (for example create a new slice via `add`).
-10. For `reorder`, `add`, `add-next`, `update`, `deprecate`, and `restore`, enforce folder-name consistency for non-applied slices only:
+4. On `next`, `start`, or any `Ready` → propose transition: use the slice's `Candidate OpenSpec change id` verbatim for the change folder name; never substitute a goal-derived slug.
+5. Always update the roadmap after any command that changes lifecycle state.
+6. For `add` and `add-next`, do not require user-provided slice id or title. Generate both from intent using the repository prefix/sequence rules and preserve uniqueness.
+7. For `add`, do not append blindly to the end. Evaluate dependencies, risk, and leverage against existing slices, then insert the slice at the most suitable position in `Recommended Execution Order`.
+8. When `add` or `add-next` causes reordering, explicitly report inserted position, concise rationale, and whether it changes the next recommended slice.
+9. For `add-next`, insert as the nearest valid next position. If hard dependencies prevent immediate placement, place at the earliest valid slot, explain why, and add a short note that it was forced in pipeline.
+10. For `update`, reject lifecycle-only edits; use it only for feature-scope updates on non-executed slices. If a slice is already `Applying`, `Applied`, or `Archived`, do not mutate scope and return a follow-up recommendation (for example create a new slice via `add`).
+11. For `reorder`, `add`, `add-next`, `update`, `deprecate`, and `restore`, enforce folder-name consistency for non-applied slices only:
     - if execution order or slice title changes and a related `openspec/changes/<change-id>/` folder already exists for a slice in `Ready` or `Spec Proposed`, rename that folder to the new `<slice-id-lower>-<slice-title-kebab>` value
     - update `Candidate OpenSpec change id`, `Spec link`, and any in-roadmap references accordingly
     - do not rename folders for `Applying`, `Applied`, or `Archived` slices
-11. For `deprecate` and `restore`, run reorder logic whenever queue consistency or priority is impacted.
-12. For `next`, execute one gate only and stop. Never chain propose + apply + archive in a single `next` call.
-13. For `next`, stop immediately on blocker, failed verification/tests, or missing required approval; record progress up to the reached step and return the stop reason with the exact next manual action.
-14. After every `propose`, `apply`, and `archive`, run the repository OpenSpec spec verification command; if it reports issues, resolve and re-run before proceeding.
-15. If temporary helper files are needed during roadmap work, place them only under `openspec/.temp_assets/` and keep them out of version control via `.gitignore`.
+12. For `deprecate` and `restore`, run reorder logic whenever queue consistency or priority is impacted.
+13. For `next`, execute one gate only and stop. Never chain propose + apply + archive in a single `next` call.
+14. For `next`, stop immediately on blocker, failed verification/tests, or missing required approval; record progress up to the reached step and return the stop reason with the exact next manual action.
+15. After every `propose`, `apply`, and `archive`, run the repository OpenSpec spec verification command; if it reports issues, resolve and re-run before proceeding.
+16. If temporary helper files are needed during roadmap work, place them only under `openspec/.temp_assets/` and keep them out of version control via `.gitignore`.
 
 Deprecation policy:
 
@@ -268,7 +283,7 @@ Snippets and a routing table template: [REFERENCE.md — Agent docs snippet](REF
 | Skill | When |
 |-------|------|
 | `PRD.md` file | No formal PRD yet |
-| `openspec-propose` | Slice `Ready` → create change |
+| `openspec-propose` | Slice `Ready` → create change at `openspec/changes/<Candidate OpenSpec change id>/` (exact id from roadmap) |
 | `openspec-apply-change` | Implement approved change |
 | `openspec-archive-change` | After completion |
 | `grill-with-docs` | Slice text needs domain alignment |
@@ -280,6 +295,7 @@ Snippets and a routing table template: [REFERENCE.md — Agent docs snippet](REF
 - One mega OpenSpec change for an entire PRD when slices are independent.
 - Duplicating `proposal.md` / `design.md` / `tasks.md` content in the roadmap.
 - Skipping roadmap updates after propose / apply / archive.
+- Inventing a propose folder name from goal/PRD text instead of the slice's `Candidate OpenSpec change id`.
 - Installing the skill or bootstrapping a roadmap without updating repository agent instructions — other sessions will miss the roadmap layer.
 
 ## Additional resources

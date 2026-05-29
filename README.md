@@ -14,12 +14,12 @@ Shipped skills live under `skills/engineering/`. Full bucket layout (productivit
 
 | Skill | What it does |
 |-------|----------------|
-| [**openspec-program**](skills/engineering/openspec-program/SKILL.md) | Split a large PRD or epic into prioritized OpenSpec **slices**, track them in a program register, and keep status in sync with propose → apply → archive. |
+| [**openspec-roadmap**](skills/engineering/openspec-roadmap/SKILL.md) | Split a large PRD or epic into prioritized OpenSpec **slices**, track them in `openspec/roadmap.md`, and keep status in sync with propose → apply → archive. |
 
-Human-oriented overview: [openspec-program/README.md](skills/engineering/openspec-program/README.md).
+Human-oriented overview: [openspec-roadmap/README.md](skills/engineering/openspec-roadmap/README.md).
 
 ```
-PRD / epic  →  program register (slices)  →  one OpenSpec change per slice
+PRD / epic  →  openspec/roadmap.md (slices)  →  one OpenSpec change per slice
 ```
 
 ## Use in your repository
@@ -33,7 +33,7 @@ npx skills@latest add bardaxx/skillbook
 ### Manual setup
 
 1. Copy or install the skill folder into your agent skills path (e.g. `.agents/skills/<name>/`).
-2. Document it in your repository **agent instructions** (`AGENTS.md` or mirrors) — especially for [openspec-program](skills/engineering/openspec-program/SKILL.md), which expects a program layer in the consumer repo.
+2. Document it in your repository **agent instructions** (`AGENTS.md` or mirrors) — especially for [openspec-roadmap](skills/engineering/openspec-roadmap/SKILL.md), which expects `openspec/roadmap.md` in the consumer repo. Remove any old `openspec-program` install if present.
 3. Invoke by skill name when the task matches the skill description.
 
 Some skills assume other tooling in the consumer repo (e.g. [OpenSpec](https://github.com/Fission-AI/OpenSpec), PRD workflows). They are referenced, not bundled here.

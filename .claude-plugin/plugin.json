@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "skills": [
     {
-      "name": "openspec-program",
-      "description": "Decompose a PRD or epic into prioritized OpenSpec slices and sync program register lifecycle with propose, apply, and archive.",
-      "path": "skills/engineering/openspec-program/SKILL.md"
+      "name": "openspec-roadmap",
+      "description": "Decompose a PRD or epic into prioritized OpenSpec slices in openspec/roadmap.md and sync slice lifecycle with propose, apply, and archive.",
+      "path": "skills/engineering/openspec-roadmap/SKILL.md"
     }
   ]
 }
